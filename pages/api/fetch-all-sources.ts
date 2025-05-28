@@ -21,18 +21,20 @@ export default async function handler(
         return res.status(503).json({ error: 'Service unavailable due to server configuration error.' });
       }
       
-      // Check for Vercel cron secret header (Vercel sends this automatically)
-      const providedVercelCronSecret = req.headers['x-vercel-cron-secret'] as string;
+      // Check for Vercel cron secret - it comes in the authorization header
+      const authHeader = req.headers.authorization as string;
+      const providedSecret = authHeader?.replace('Bearer ', '') || null;
       
-      if (providedVercelCronSecret !== expectedSecret) {
-        console.warn(`API /api/fetch-all-sources: Unauthorized attempt. Expected secret but received: [${providedVercelCronSecret ? 'provided_secret_hidden' : 'nothing'}]`);
+      if (providedSecret !== expectedSecret) {
+        console.warn(`API /api/fetch-all-sources: Unauthorized attempt. Expected secret but received: [${providedSecret ? 'provided_secret_hidden' : 'nothing'}]`);
+        console.warn(`Auth header:`, authHeader ? 'present' : 'missing');
         console.warn(`Headers received:`, Object.keys(req.headers));
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      console.log('API /api/fetch-all-sources: Authorized via x-vercel-cron-secret.');
+      console.log('API /api/fetch-all-sources: Authorized via authorization header.');
 
     } else {
-      console.log('API /api/fetch-all-sources: Authorization check for x-vercel-cron-secret skipped in development mode.');
+      console.log('API /api/fetch-all-sources: Authorization check skipped in development mode.');
     }
 
     console.log(`API /api/fetch-all-sources: Processing ${req.method} request.`);
