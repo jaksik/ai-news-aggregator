@@ -1,0 +1,56 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import mongoose from 'mongoose'; // To validate ObjectId
+import dbConnect from '../../../lib/mongodb'; // Adjust path: up three levels
+import FetchRunLog, { IFetchRunLog } from '../../../models/FetchRunLog'; // Adjust path: up three levels
+
+// Define a type for the response data
+type Data = {
+  log?: IFetchRunLog;
+  error?: string;
+  message?: string;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) {
+  const { runId } = req.query; // Get the runId from the URL path (e.g., [runId].ts)
+
+  // 1. Validate the runId from the query
+  if (!runId || Array.isArray(runId) || !mongoose.Types.ObjectId.isValid(runId as string)) {
+    return res.status(400).json({ error: 'Invalid or missing run ID in URL path.' });
+  }
+  const idToFetch = runId as string;
+
+  // 2. Ensure Database Connection
+  try {
+    await dbConnect();
+  } catch (error: any) {
+    console.error(`API /api/fetch-logs/${idToFetch} - DB Connection Error:`, error);
+    return res.status(500).json({ error: 'Database connection failed', message: error.message });
+  }
+
+  // 3. Handle GET request to fetch a single log by its ID
+  if (req.method === 'GET') {
+    try {
+      console.log(`API /api/fetch-logs/${idToFetch}: Attempting to find log by ID.`);
+      const log = await FetchRunLog.findById(idToFetch).lean(); // Use .lean() for performance
+
+      if (!log) {
+        console.log(`API /api/fetch-logs/${idToFetch}: Log not found.`);
+        return res.status(404).json({ error: 'Fetch run log not found with the provided ID.' });
+      }
+
+      console.log(`API /api/fetch-logs/${idToFetch}: Log found.`);
+      res.status(200).json({ log: log as IFetchRunLog }); // Cast because .lean()
+
+    } catch (error: any) {
+      console.error(`API /api/fetch-logs/${idToFetch} GET Error:`, error);
+      res.status(500).json({ error: 'Failed to fetch log details from database', message: error.message });
+    }
+  } else {
+    // Handle other HTTP methods
+    res.setHeader('Allow', ['GET']);
+    res.status(405).json({ error: `Method ${req.method} Not Allowed on /api/fetch-logs/${idToFetch}` });
+  }
+}
