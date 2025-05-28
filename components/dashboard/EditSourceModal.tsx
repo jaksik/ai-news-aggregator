@@ -80,7 +80,7 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center p-4">
       <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md transform transition-all">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Edit Source: <span className="font-normal">{sourceToEdit.name}</span></h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Edit Source</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -98,7 +98,7 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
           )}
 
           <div className="mb-4">
-            <label htmlFor="editSourceName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="editSourceName" className="block text-sm font-medium text-gray-700 mb-1 font-semibold">
               Source Name
             </label>
             <input
@@ -106,13 +106,13 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
               id="editSourceName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label htmlFor="editSourceUrl" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="editSourceUrl" className="block text-sm font-medium text-gray-700 mb-1 font-semibold">
               URL
             </label>
             <input
@@ -120,20 +120,20 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
               id="editSourceUrl"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label htmlFor="editSourceType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="editSourceType" className="block text-sm font-medium text-gray-700 mb-1 font-semibold">
               Source Type
             </label>
             <select
               id="editSourceType"
               value={type}
               onChange={(e) => setType(e.target.value as 'rss' | 'html')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
             >
               <option value="rss">RSS Feed</option>
               <option value="html">HTML Webpage</option>
