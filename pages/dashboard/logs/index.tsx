@@ -1,9 +1,10 @@
+// File: pages/dashboard/logs/index.tsx
 import React, { useEffect, useState, useCallback } from 'react';
-import Head from 'next/head';
-import Link from 'next/link'; // For linking to detail view later
-import { IFetchRunLog } from '../../../models/FetchRunLog'; // Adjust path if your models folder is elsewhere
+// Remove Head from 'next/head' if DashboardLayout handles the main title
+import Link from 'next/link';
+import DashboardLayout from '../../../components/dashboard/DashboardLayout'; // Adjusted path
+import { IFetchRunLog } from '../../../models/FetchRunLog'; // Adjusted path
 
-// This interface should match the structure returned by your /api/fetch-logs endpoint
 interface FetchLogsApiResponse {
   logs?: IFetchRunLog[];
   totalLogs?: number;
@@ -21,9 +22,10 @@ const LogsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalLogs, setTotalLogs] = useState<number>(0);
-  const [limitPerPage] = useState<number>(10); // Show 10 logs per page
+  const [limitPerPage] = useState<number>(10);
 
   const fetchLogs = useCallback(async (page: number) => {
+    // ... (fetchLogs function remains the same as your current working version)
     setLoading(true);
     setError(null);
     try {
@@ -43,7 +45,7 @@ const LogsPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
       console.error("Failed to fetch logs:", err);
-      setLogs([]); // Clear logs on error
+      setLogs([]); 
       setTotalPages(1);
       setTotalLogs(0);
     } finally {
@@ -56,6 +58,7 @@ const LogsPage: React.FC = () => {
   }, [currentPage, fetchLogs]);
 
   const formatDate = (dateString?: string | Date) => {
+    // ... (formatDate function remains the same)
     if (!dateString) return 'N/A';
     try {
       return new Date(dateString).toLocaleString('en-US', {
@@ -63,11 +66,12 @@ const LogsPage: React.FC = () => {
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
       });
     } catch (e) {
-      return String(dateString); // Fallback if date is already formatted or unusual
+      return String(dateString);
     }
   };
 
   const getStatusColor = (status: IFetchRunLog['status']) => {
+    // ... (getStatusColor function remains the same)
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-700';
       case 'completed_with_errors': return 'bg-yellow-100 text-yellow-700';
@@ -78,37 +82,34 @@ const LogsPage: React.FC = () => {
   };
 
   return (
-    <>
-      <Head>
-        <title>Fetch Run Logs - News Aggregator</title>
-      </Head>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen bg-gray-50">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Fetch Run Log</h1>
-          <p className="text-md md:text-lg text-gray-600">History of the news aggregation process.</p>
-        </header>
+    <DashboardLayout pageTitle="Fetch Run Logs - My Aggregator">
+      {/* The outer container and Head for title are now handled by DashboardLayout */}
+      <header className="mb-8 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Fetch Run Log</h1>
+        <p className="text-md md:text-lg text-gray-600">History of the news aggregation process.</p>
+      </header>
 
-        {loading && (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-xl text-gray-500">Loading logs...</p>
-            {/* You could add a spinner SVG here */}
-          </div>
-        )}
-        {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
-            <p className="font-bold">Error</p>
-            <p>{error}</p>
-          </div>
-        )}
+      {loading && (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-xl text-gray-500">Loading logs...</p>
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+          <p className="font-bold">Error</p>
+          <p>{error}</p>
+        </div>
+      )}
 
-        {!loading && !error && (
-          <>
-            {logs.length === 0 ? (
-              <p className="text-center text-xl text-gray-500 py-10">No fetch logs found.</p>
-            ) : (
-              <div className="bg-white shadow-xl rounded-lg overflow-x-auto">
-                <table className="min-w-full leading-normal">
-                  <thead>
+      {!loading && !error && (
+        <>
+          {logs.length === 0 ? (
+            <p className="text-center text-xl text-gray-500 py-10">No fetch logs found.</p>
+          ) : (
+            <div className="bg-white shadow-xl rounded-lg overflow-x-auto">
+              <table className="min-w-full leading-normal">
+                {/* ... (thead and tbody structure remains the same as your working version) ... */}
+                <thead>
                     <tr className="bg-gray-200 text-left text-gray-600 uppercase text-sm tracking-wider">
                       <th className="px-5 py-3 border-b-2 border-gray-300">Start Time</th>
                       <th className="px-5 py-3 border-b-2 border-gray-300">Duration</th>
@@ -141,7 +142,6 @@ const LogsPage: React.FC = () => {
                               : (log.totalSourcesFailedWithError > 0 ? `${log.totalSourcesFailedWithError} source(s) had fetch errors` : 'None')}
                           </td>
                           <td className="px-5 py-4 text-sm">
-                            {/* This link will be for Step 5.3 */}
                             <Link href={`/dashboard/logs/${log._id?.toString()}`} legacyBehavior>
                               <a className="text-indigo-600 hover:text-indigo-800 hover:underline">View Details</a>
                             </Link>
@@ -150,13 +150,14 @@ const LogsPage: React.FC = () => {
                       );
                     })}
                   </tbody>
-                </table>
-              </div>
-            )}
+              </table>
+            </div>
+          )}
 
-            {/* Pagination Controls */}
-            {totalLogs > 0 && totalPages > 1 && (
-              <div className="py-5 flex flex-col xs:flex-row items-center xs:justify-between">
+          {/* Pagination Controls */}
+          {totalLogs > 0 && totalPages > 1 && (
+            // ... (pagination controls remain the same) ...
+            <div className="py-5 flex flex-col xs:flex-row items-center xs:justify-between">
                 <div className="text-xs xs:text-sm text-gray-600">
                   Showing {((currentPage - 1) * limitPerPage) + 1} to {Math.min(currentPage * limitPerPage, totalLogs)} of {totalLogs} Logs
                 </div>
@@ -177,11 +178,10 @@ const LogsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-            )}
-          </>
-        )}
-      </div>
-    </>
+          )}
+        </>
+      )}
+    </DashboardLayout>
   );
 };
 
