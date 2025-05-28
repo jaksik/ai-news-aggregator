@@ -15,23 +15,24 @@ export default async function handler(
     const isDevelopment = process.env.NODE_ENV === 'development';
 
     // Authorization Check
-    if (!isDevelopment) { // Stricter checks for non-development (Preview, Production)
+    if (!isDevelopment) {
       if (!expectedSecret) {
         console.error('API /api/fetch-all-sources: CRITICAL - CRON_SECRET is not set in this environment. Denying access.');
         return res.status(503).json({ error: 'Service unavailable due to server configuration error.' });
       }
       
-      const providedVercelCronSecret = req.headers['x-vercel-cron-secret'];
+      // Check for Vercel cron secret header (Vercel sends this automatically)
+      const providedVercelCronSecret = req.headers['x-vercel-cron-secret'] as string;
+      
       if (providedVercelCronSecret !== expectedSecret) {
         console.warn(`API /api/fetch-all-sources: Unauthorized attempt. Expected secret but received: [${providedVercelCronSecret ? 'provided_secret_hidden' : 'nothing'}]`);
+        console.warn(`Headers received:`, Object.keys(req.headers));
         return res.status(401).json({ error: 'Unauthorized' });
       }
       console.log('API /api/fetch-all-sources: Authorized via x-vercel-cron-secret.');
 
-    } else { // Development mode
+    } else {
       console.log('API /api/fetch-all-sources: Authorization check for x-vercel-cron-secret skipped in development mode.');
-      // In dev, you might still want to test the secret if your CRON_SECRET is set in .env.local and you simulate the header with curl
-      // For the UI button (which sends no header), this allows it to pass in dev.
     }
 
     console.log(`API /api/fetch-all-sources: Processing ${req.method} request.`);
@@ -49,7 +50,7 @@ export default async function handler(
       });
     }
   } else {
-    res.setHeader('Allow', ['GET', 'POST']); // Indicate both methods are allowed
+    res.setHeader('Allow', ['GET', 'POST']);
     res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
