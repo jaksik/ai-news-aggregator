@@ -1,8 +1,8 @@
-// File: /models/FetchRunLog.ts
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 // 1. Define IItemErrorSubdoc first, as IProcessingSummarySubdoc will use it.
-interface IItemErrorSubdoc {
+// Add 'export' keyword here:
+export interface IItemErrorSubdoc { // <--- ADD export HERE
   itemTitle?: string;
   itemLink?: string;
   message: string;
@@ -15,13 +15,13 @@ const ItemErrorSchema = new Schema<IItemErrorSubdoc>({
 
 
 // 2. Define IProcessingSummarySubdoc next, as IFetchRunLog will use it.
-// This interface should structurally match the ProcessingSummary interface from your fetcher.ts
-interface IProcessingSummarySubdoc {
+// Add 'export' keyword here:
+export interface IProcessingSummarySubdoc { // <--- ADD export HERE
   sourceUrl: string;
   sourceName: string;
   type: 'rss' | 'html';
   status: 'success' | 'partial_success' | 'failed';
-  message: string; // Or message?: string; if it can be undefined. Let's make it consistent.
+  message: string; 
   itemsFound: number;
   itemsProcessed: number;
   newItemsAdded: number;
@@ -35,17 +35,18 @@ const ProcessingSummarySchema = new Schema<IProcessingSummarySubdoc>({
   sourceName: { type: String, required: true },
   type: { type: String, enum: ['rss', 'html'], required: true },
   status: { type: String, enum: ['success', 'partial_success', 'failed'], required: true },
-  message: { type: String, default: '' }, // Default to empty string
+  message: { type: String, default: '' }, 
   itemsFound: { type: Number, default: 0, required: true },
   itemsProcessed: { type: Number, default: 0, required: true },
   newItemsAdded: { type: Number, default: 0, required: true },
   itemsSkipped: { type: Number, default: 0, required: true },
-  errors: [ItemErrorSchema], // Uses the ItemErrorSchema
+  errors: [ItemErrorSchema], 
   fetchError: { type: String },
 }, { _id: false });
 
 
 // 3. Now define IFetchRunLog, which uses IProcessingSummarySubdoc.
+// This one is already exported, which is good.
 export interface IFetchRunLog extends Document {
   startTime: Date;
   endTime?: Date;
@@ -60,6 +61,8 @@ export interface IFetchRunLog extends Document {
   updatedAt?: Date;
 }
 
+// ... (rest of your FetchRunLog.ts file remains the same) ...
+
 const FetchRunLogSchema: Schema<IFetchRunLog> = new Schema(
   {
     startTime: { type: Date, required: true, default: Date.now },
@@ -70,7 +73,7 @@ const FetchRunLogSchema: Schema<IFetchRunLog> = new Schema(
     totalSourcesFailedWithError: { type: Number, default: 0 },
     totalNewArticlesAddedAcrossAllSources: { type: Number, default: 0 },
     orchestrationErrors: [{ type: String }],
-    sourceSummaries: [ProcessingSummarySchema], // This uses the Mongoose schema for subdocuments
+    sourceSummaries: [ProcessingSummarySchema], 
   },
   {
     timestamps: true,

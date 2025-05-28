@@ -1,8 +1,8 @@
 // File: pages/dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import ArticleList from '../components/dashboard/ArticleList'; // Adjust the import path as needed
-import { IArticle } from '../models/Article'; // Assuming IArticle is also suitable for frontend use
+import ArticleList from '../../components/dashboard/ArticleList'; // Adjust the import path as needed
+import { IArticle } from '../../models/Article'; // Assuming IArticle is also suitable for frontend use
 
 // Define a simpler type for frontend if IArticle has Mongoose specific Document parts you don't need
 // For now, we'll use IArticle and assume it's okay.
