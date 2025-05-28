@@ -17,7 +17,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
         hour: '2-digit',
         minute: '2-digit',
       });
-    } catch (e) {
+    } catch {
       return 'Invalid Date';
     }
   };

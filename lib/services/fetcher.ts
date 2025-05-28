@@ -3,16 +3,15 @@
 import axios from 'axios';
 import Parser from 'rss-parser';
 import * as cheerio from 'cheerio';
+import mongoose from 'mongoose'; // Import mongoose for Types.ObjectId
 
-// MongoDB and Models - ensure paths are correct
-// If fetcher.ts is in /lib/services/, and models are in /models/
-// and mongodb/index.ts is in /lib/mongodb/
-import dbConnect from '../mongodb'; // Corrected: Assumes dbConnect is in /lib/mongodb/
+// MongoDB and Models
+import dbConnect from '../mongodb';
 import Article, { IArticle } from '../../models/Article';
-import Source, { ISource } from '../../models/Source';
-import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog'; // Import for logging
+import Source /* remove { ISource } if ISource interface itself is not used in this file */ from '../../models/Source';
+import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
 
-// --- Interface Definitions (should be at the top or imported) ---
+// --- Interface Definitions ---
 
 export interface SourceToFetch {
     url: string;
@@ -20,7 +19,7 @@ export interface SourceToFetch {
     name: string;
 }
 
-export interface ItemError { // For ProcessingSummary
+export interface ItemError {
     itemTitle?: string;
     itemLink?: string;
     message: string;
@@ -30,22 +29,20 @@ export interface ProcessingSummary {
     sourceUrl: string;
     sourceName: string;
     type: 'rss' | 'html';
-    status: 'success' | 'partial_success' | 'failed'; // Status for a single source processing
+    status: 'success' | 'partial_success' | 'failed';
     message: string;
     itemsFound: number;
     itemsProcessed: number;
     newItemsAdded: number;
     itemsSkipped: number;
-    errors: ItemError[]; // Array of ItemError
+    errors: ItemError[];
     fetchError?: string;
 }
 
-// Result of processing ALL enabled sources
 export interface OverallFetchRunResult {
     startTime: Date;
     endTime: Date;
-    // Updated status enum for the overall run, matching FetchRunLog
-    status: 'completed' | 'completed_with_errors' | 'failed' | 'in-progress'; // 'no_sources_found' will be handled by message
+    status: 'completed' | 'completed_with_errors' | 'failed' | 'in-progress';
     totalSourcesAttempted: number;
     totalSourcesSuccessfullyProcessed: number;
     totalSourcesFailedWithError: number;
@@ -59,14 +56,14 @@ export interface OverallFetchRunResult {
 const rssParser = new Parser();
 
 // --- Core Function for Processing a Single Source ---
-export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
+export async function fetchParseAndStoreSource(
     source: SourceToFetch
 ): Promise<ProcessingSummary> {
     const summary: ProcessingSummary = {
         sourceUrl: source.url,
         sourceName: source.name,
         type: source.type,
-        status: 'failed', // Default to failed
+        status: 'failed',
         message: '',
         itemsFound: 0,
         itemsProcessed: 0,
@@ -77,8 +74,6 @@ export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
 
     try {
         await dbConnect();
-        // console.log(`Fetcher: DB connected for source ${source.name}`);
-
         const response = await axios.get(source.url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -91,7 +86,6 @@ export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
         if (source.type === 'rss') {
             const parsedFeed = await rssParser.parseString(rawContent);
             summary.itemsFound = parsedFeed.items?.length || 0;
-            // summary.message = `Found ${summary.itemsFound} items in RSS feed.`; // Will be set more accurately later
 
             if (parsedFeed.items && parsedFeed.items.length > 0) {
                 for (const item of parsedFeed.items) {
@@ -100,7 +94,6 @@ export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
                     const itemTitle = item.title?.trim();
 
                     if (!normalizedLink) {
-                        // console.warn(`Fetcher: RSS item from ${source.name} missing link. Title: ${itemTitle || 'N/A'}`);
                         summary.errors.push({ itemTitle, message: 'Item missing link.' });
                         continue;
                     }
@@ -131,13 +124,15 @@ export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
                             await newArticleDoc.save();
                             summary.newItemsAdded++;
                         }
-                    } catch (dbError: any) {
-                        // console.error(`Fetcher: DB error for item "${itemTitle || normalizedLink}":`, dbError.message);
-                        summary.errors.push({ itemTitle, itemLink: normalizedLink, message: dbError.message });
+                    } catch (dbError: unknown) { // Changed to unknown
+                        let message = 'Unknown database error';
+                        if (dbError instanceof Error) {
+                            message = dbError.message;
+                        }
+                        summary.errors.push({ itemTitle, itemLink: normalizedLink, message });
                     }
                 }
             }
-            // Set status and message for RSS
             if (summary.errors.length > 0) {
                 summary.status = 'partial_success';
                 summary.message = `Processed ${summary.itemsProcessed} RSS items with ${summary.errors.length} errors. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
@@ -146,42 +141,44 @@ export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
                 summary.message = "No items found in RSS feed.";
             } else {
                 summary.status = 'success';
-                summary.message = `Processed ${summary.itemsProcessed} RSS items. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
+                summary.message = `Successfully processed ${summary.itemsProcessed} RSS items. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
             }
-
-
         } else if (source.type === 'html') {
             const $ = cheerio.load(rawContent);
             const pageTitle = $('title').text();
-            summary.itemsFound = 1; // Basic HTML processing
+            summary.itemsFound = 1;
             summary.itemsProcessed = 1;
             summary.message = `HTML page "${pageTitle}" fetched. Full article extraction & saving not yet implemented for individual articles.`;
-            summary.status = 'success'; // For fetching the page itself
-            // console.log(`Fetcher: HTML page "${pageTitle}" processed (basic).`);
+            summary.status = 'success';
         }
-
-    } catch (error: any) {
-        // console.error(`Fetcher: Error processing source ${source.name} (${source.url}):`, error.message);
-        summary.fetchError = error.message;
-        summary.message = `Failed to fetch or process source: ${error.message}`;
-        summary.status = 'failed'; // Explicitly set to failed on fetch error
+    } catch (error: unknown) { // Changed to unknown
+        let message = 'Failed to fetch or process source.';
+        if (error instanceof Error) {
+            message = `Failed to fetch or process source: ${error.message}`;
+            if (axios.isAxiosError(error) && error.response) {
+                 message += ` Status: ${error.response.status}.`;
+            }
+        }
+        summary.fetchError = (error instanceof Error) ? error.message : String(error);
+        summary.message = message;
+        summary.status = 'failed';
     }
     return summary;
 }
 
 // --- Orchestrator Function ---
-export async function processAllEnabledSources(): Promise<OverallFetchRunResult> { // Make sure this is EXPORTED
+export async function processAllEnabledSources(): Promise<OverallFetchRunResult> {
     const startTime = new Date();
     const detailedSummaries: ProcessingSummary[] = [];
     let totalNewArticlesAddedAcrossAllSources = 0;
     let totalSourcesSuccessfullyProcessed = 0;
     let totalSourcesFailedWithError = 0;
     const orchestrationErrors: string[] = [];
-    let runStatus: OverallFetchRunResult['status'] = 'failed'; // Default overall run status
+    let runStatus: OverallFetchRunResult['status'] = 'failed';
     let logId: string | undefined = undefined;
+    let currentRunLog: IFetchRunLog | null = null;
 
     console.log('Orchestrator: Starting fetch run...');
-    let currentRunLog: IFetchRunLog | null = null;
 
     try {
         await dbConnect();
@@ -189,18 +186,22 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
             startTime,
             status: 'in-progress',
         });
-        // Mongoose assigns _id upon instantiation
-        logId = (currentRunLog._id as string | { toString(): string }).toString(); // Typecast to fix type error
-        await currentRunLog.save();          // Then save.
+        // _id is an ObjectId, ensure it's treated as such or cast for toString()
+        logId = (currentRunLog._id as mongoose.Types.ObjectId).toString();
+        await currentRunLog.save();
         console.log(`Orchestrator: Created initial FetchRunLog with ID: ${logId}`);
-    } catch (logError: any) {
-        const errMsg = `Orchestrator: CRITICAL - Failed to create initial FetchRunLog: ${logError.message}`;
+    } catch (logError: unknown) { // Changed to unknown
+        let message = 'Unknown error creating initial FetchRunLog.';
+        if (logError instanceof Error) {
+            message = logError.message;
+        }
+        const errMsg = `Orchestrator: CRITICAL - Failed to create initial FetchRunLog: ${message}`;
         console.error(errMsg);
         orchestrationErrors.push(errMsg);
-        return {
+        return { /* return immediate failure summary as before */ 
             startTime,
             endTime: new Date(),
-            status: 'failed', // Orchestration failed at logging stage
+            status: 'failed',
             totalSourcesAttempted: 0,
             totalSourcesSuccessfullyProcessed: 0,
             totalSourcesFailedWithError: 0,
@@ -213,21 +214,18 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
 
     try {
         const sourcesToProcess = await Source.find({ isEnabled: true }).lean();
-
         if (!sourcesToProcess || sourcesToProcess.length === 0) {
             console.log('Orchestrator: No enabled sources found to process.');
             orchestrationErrors.push('No enabled sources found to process.');
-            runStatus = 'completed'; // Completed, but nothing to do.
+            runStatus = 'completed';
         } else {
             console.log(`Orchestrator: Found ${sourcesToProcess.length} enabled sources to process.`);
             for (const sourceDoc of sourcesToProcess) {
-                // console.log(`Orchestrator: Processing source - ${sourceDoc.name} (${sourceDoc.url})`);
                 const sourceInput: SourceToFetch = {
                     url: sourceDoc.url,
                     type: sourceDoc.type,
                     name: sourceDoc.name,
                 };
-
                 const summary = await fetchParseAndStoreSource(sourceInput);
                 detailedSummaries.push(summary);
 
@@ -239,62 +237,73 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
                 }
 
                 try {
+                    // sourceDoc._id is from a .lean() query, so it's likely already a compatible type (ObjectId or string)
+                    // Mongoose methods like findByIdAndUpdate can often handle string representation of ObjectId
                     await Source.findByIdAndUpdate(sourceDoc._id, {
                         lastFetchedAt: new Date(),
                         lastStatus: summary.status,
                         lastFetchMessage: summary.message,
                         lastError: summary.fetchError || (summary.errors.length > 0 ? `${summary.errors.length} item-level error(s)` : undefined),
                     });
-                } catch (updateError: any) {
-                    const errMsg = `Orchestrator: Failed to update source '${sourceDoc.name}' in DB: ${updateError.message}`;
+                } catch (updateError: unknown) { // Changed to unknown
+                    let message = 'Unknown error updating source document.';
+                    if (updateError instanceof Error) {
+                        message = updateError.message;
+                    }
+                    const errMsg = `Orchestrator: Failed to update source '${sourceDoc.name}' in DB: ${message}`;
                     console.error(errMsg);
                     orchestrationErrors.push(errMsg);
                 }
             }
-            // Determine overall run status after processing sources
             if (orchestrationErrors.length > 0 || totalSourcesFailedWithError > 0) {
                 runStatus = 'completed_with_errors';
             } else {
                 runStatus = 'completed';
             }
         }
-    } catch (error: any) {
-        const errMsg = `Orchestrator: Error during sources processing loop: ${error.message}`;
+    } catch (error: unknown) { // Changed to unknown
+        let message = 'Unknown error during sources processing loop.';
+        if (error instanceof Error) {
+            message = error.message;
+        }
+        const errMsg = `Orchestrator: Error during sources processing loop: ${message}`;
         console.error(errMsg);
         orchestrationErrors.push(errMsg);
         runStatus = 'failed';
-// ... (inside processAllEnabledSources)
-  } finally {
-    const endTime = new Date();
-    if (currentRunLog) {
-      currentRunLog.endTime = endTime;
-      currentRunLog.status = runStatus; 
-      currentRunLog.totalSourcesAttempted = detailedSummaries.length;
-      currentRunLog.totalSourcesSuccessfullyProcessed = totalSourcesSuccessfullyProcessed;
-      currentRunLog.totalSourcesFailedWithError = totalSourcesFailedWithError;
-      currentRunLog.totalNewArticlesAddedAcrossAllSources = totalNewArticlesAddedAcrossAllSources;
-      currentRunLog.orchestrationErrors = orchestrationErrors;
-      
-      // Corrected assignment:
-      currentRunLog.sourceSummaries = detailedSummaries; 
+    } finally {
+        const endTime = new Date();
+        if (currentRunLog) {
+            currentRunLog.endTime = endTime;
+            currentRunLog.status = runStatus;
+            currentRunLog.totalSourcesAttempted = detailedSummaries.length;
+            currentRunLog.totalSourcesSuccessfullyProcessed = totalSourcesSuccessfullyProcessed;
+            currentRunLog.totalSourcesFailedWithError = totalSourcesFailedWithError;
+            currentRunLog.totalNewArticlesAddedAcrossAllSources = totalNewArticlesAddedAcrossAllSources;
+            currentRunLog.orchestrationErrors = orchestrationErrors;
+            currentRunLog.sourceSummaries = detailedSummaries; // Direct assignment
 
-      try {
-        await currentRunLog.save(); // Mongoose will handle subdocument creation here
-        console.log(`Orchestrator: Finalized FetchRunLog ID: ${logId || (currentRunLog._id as any).toString()} with status: ${currentRunLog.status}`);
-      } catch (logSaveError: any) {
-        const finalLogErrMsg = `Orchestrator: CRITICAL - Failed to save final FetchRunLog (ID: ${logId || currentRunLog?._id?.toString() || 'unknown'}): ${logSaveError.message}`;
-        console.error(finalLogErrMsg);
-        orchestrationErrors.push(finalLogErrMsg);
-        runStatus = 'failed'; 
-      }
+            try {
+                await currentRunLog.save();
+                // Use logId (which should be string) or cast _id to string safely
+                const finalLogId = logId || (currentRunLog._id as mongoose.Types.ObjectId)?.toString() || 'unknown_after_save_attempt';
+                console.log(`Orchestrator: Finalized FetchRunLog ID: ${finalLogId} with status: ${currentRunLog.status}`);
+            } catch (logSaveError: unknown) { // Changed to unknown
+                let message = 'Unknown error saving final FetchRunLog.';
+                if (logSaveError instanceof Error) {
+                    message = logSaveError.message;
+                }
+                const finalLogErrMsg = `Orchestrator: CRITICAL - Failed to save final FetchRunLog (ID: ${logId || currentRunLog?._id?.toString() || 'unknown'}): ${message}`;
+                console.error(finalLogErrMsg);
+                orchestrationErrors.push(finalLogErrMsg);
+                runStatus = 'failed';
+            }
+        }
     }
-  }
-// ... rest of the function ...
 
     const result: OverallFetchRunResult = {
         startTime,
         endTime: currentRunLog?.endTime || new Date(),
-        status: runStatus, // Use the finally determined runStatus
+        status: runStatus,
         totalSourcesAttempted: detailedSummaries.length,
         totalSourcesSuccessfullyProcessed,
         totalSourcesFailedWithError,
@@ -303,7 +312,7 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
         orchestrationErrors,
         logId,
     };
-
+    
     console.log(`Orchestrator: Fetch run finished. Duration: ${(result.endTime.getTime() - result.startTime.getTime()) / 1000}s. Status: ${result.status}.`);
     return result;
 }

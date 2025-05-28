@@ -8,7 +8,7 @@ type ResponseData = {
   source?: ISource;     // For POST success (the created source)
   message?: string;
   error?: string;
-  errors?: any;       // For Mongoose validation errors
+  errors?: Record<string, unknown>;       // For Mongoose validation errors
 }
 
 export default async function handler(
@@ -17,9 +17,10 @@ export default async function handler(
 ) {
   try {
     await dbConnect(); // Ensure DB connection for all methods
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/sources - DB Connection Error:', error);
-    return res.status(500).json({ error: 'Database connection failed', message: error.message });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
+    return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
   }
 
   if (req.method === 'GET') {
@@ -28,9 +29,10 @@ export default async function handler(
         .sort({ createdAt: -1 })
         .lean();
       return res.status(200).json({ sources: sources as ISource[] });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('API /api/sources GET Error:', error);
-      return res.status(500).json({ error: 'Failed to fetch sources', message: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return res.status(500).json({ error: 'Failed to fetch sources', message: errorMessage });
     }
   } else if (req.method === 'POST') {
     try {
@@ -57,18 +59,27 @@ export default async function handler(
 
       return res.status(201).json({ message: 'Source created successfully', source: savedSource });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('API /api/sources POST Error:', error);
-      if (error.name === 'ValidationError') {
-        // Handle Mongoose validation errors (e.g., required field missing as per schema)
-        return res.status(400).json({ error: 'Validation failed', message: error.message, errors: error.errors });
+      
+      // Type guard for Mongoose validation errors
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'ValidationError') {
+        const validationError = error as unknown as { message: string; errors: Record<string, unknown> };
+        return res.status(400).json({ 
+          error: 'Validation failed', 
+          message: validationError.message, 
+          errors: validationError.errors 
+        });
       }
-      if (error.code === 11000) {
-        // Handle duplicate key error from MongoDB (e.g., if 'url' is not unique)
+      
+      // Type guard for MongoDB duplicate key errors
+      if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
         return res.status(409).json({ error: 'Duplicate data', message: 'A source with this URL already exists.' });
       }
+      
       // For other errors
-      return res.status(500).json({ error: 'Failed to create source', message: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return res.status(500).json({ error: 'Failed to create source', message: errorMessage });
     }
   } else {
     // Update Allow header for other methods

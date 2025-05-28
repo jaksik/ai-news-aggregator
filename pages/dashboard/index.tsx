@@ -29,8 +29,9 @@ const MainDashboardPage: React.FC = () => { // Renamed to MainDashboardPage for 
         }
         const data: FetchArticlesApiResponse = await response.json();
         setArticles(data.articles || []);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        setError(errorMessage);
         console.error("Failed to fetch articles for dashboard:", err);
         setArticles([]); // Clear articles on error
       } finally {

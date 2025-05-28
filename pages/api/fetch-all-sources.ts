@@ -40,11 +40,12 @@ export default async function handler(
       const result = await processAllEnabledSources();
       console.log(`API /api/fetch-all-sources: Orchestration complete. Added ${result.totalNewArticlesAddedAcrossAllSources} new articles.`);
       return res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('API /api/fetch-all-sources CRITICAL ERROR:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return res.status(500).json({ 
         error: 'Failed to execute fetch-all-sources process.', 
-        message: error.message 
+        message: errorMessage 
       });
     }
   } else {

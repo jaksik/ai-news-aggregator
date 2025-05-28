@@ -53,9 +53,10 @@ export default async function handler(
       console.log(`API: Finished manual fetch for ${sourceDoc.name}. Status: ${processingResult.status}, New Articles: ${processingResult.newItemsAdded}`);
       return res.status(200).json(processingResult);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`API /api/sources/${id}/fetch-now POST Error:`, error);
-      return res.status(500).json({ error: 'Failed to trigger fetch for source', message: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return res.status(500).json({ error: 'Failed to trigger fetch for source', message: errorMessage });
     }
   } else {
     res.setHeader('Allow', ['POST']);
