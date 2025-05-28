@@ -48,8 +48,9 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
       setUrl('');
       setType('rss');
 
-    } catch (err: any) {
-      setFormError(err.message || 'An unexpected error occurred.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setFormError(errorMessage);
       console.error('Failed to add source:', err);
     } finally {
       setIsSubmitting(false);

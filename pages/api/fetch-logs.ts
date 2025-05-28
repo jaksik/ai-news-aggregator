@@ -19,9 +19,10 @@ export default async function handler(
   // Ensure database connection
   try {
     await dbConnect();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API /api/fetch-logs - DB Connection Error:', error);
-    return res.status(500).json({ error: 'Database connection failed', message: error.message });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
+    return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
   }
 
   if (req.method === 'GET') {
@@ -52,9 +53,10 @@ export default async function handler(
         limit,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('API /api/fetch-logs GET Error:', error);
-      res.status(500).json({ error: 'Failed to fetch logs from database', message: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ error: 'Failed to fetch logs from database', message: errorMessage });
     }
   } else {
     // Handle other HTTP methods

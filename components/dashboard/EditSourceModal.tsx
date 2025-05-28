@@ -64,8 +64,9 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
       onSourceUpdated(); // Trigger refresh of the source list
       onClose();       // Close the modal
 
-    } catch (err: any) {
-      setFormError(err.message || 'An unexpected error occurred while updating.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while updating.';
+      setFormError(errorMessage);
       console.error('Failed to update source:', err);
     } finally {
       setIsSubmitting(false);

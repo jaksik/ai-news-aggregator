@@ -42,8 +42,9 @@ const LogsPage: React.FC = () => {
       } else {
         setTotalPages(1);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
       console.error("Failed to fetch logs:", err);
       setLogs([]); 
       setTotalPages(1);
@@ -65,7 +66,7 @@ const LogsPage: React.FC = () => {
         year: 'numeric', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
       });
-    } catch (e) {
+    } catch {
       return String(dateString);
     }
   };

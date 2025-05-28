@@ -25,9 +25,10 @@ export default async function handler(
   // 2. Ensure Database Connection
   try {
     await dbConnect();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`API /api/fetch-logs/${idToFetch} - DB Connection Error:`, error);
-    return res.status(500).json({ error: 'Database connection failed', message: error.message });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
+    return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
   }
 
   // 3. Handle GET request to fetch a single log by its ID
@@ -44,9 +45,10 @@ export default async function handler(
       console.log(`API /api/fetch-logs/${idToFetch}: Log found.`);
       res.status(200).json({ log: log as IFetchRunLog }); // Cast because .lean()
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`API /api/fetch-logs/${idToFetch} GET Error:`, error);
-      res.status(500).json({ error: 'Failed to fetch log details from database', message: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ error: 'Failed to fetch log details from database', message: errorMessage });
     }
   } else {
     // Handle other HTTP methods

@@ -1,16 +1,9 @@
 // File: pages/dashboard/sources.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react'; // Added useRef
-import Head from 'next/head';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import { ISource } from '../../models/Source';
 import AddSourceModal from '../../components/dashboard/AddSourceModal';
 import EditSourceModal from '../../components/dashboard/EditSourceModal';
-
-interface FetchSourcesApiResponse {
-  sources?: ISource[];
-  error?: string;
-  message?: string;
-}
 
 const SourcesPage: React.FC = () => {
   const [sources, setSources] = useState<ISource[]>([]);
@@ -33,7 +26,11 @@ const SourcesPage: React.FC = () => {
       const response = await fetch('/api/sources');
       if (!response.ok) { const d = await response.json(); throw new Error(d.error || 'Failed'); }
       const data = await response.json(); setSources(data.sources || []);
-    } catch (e: any) { setError(e.message); setSources([]); }
+    } catch (error: unknown) { 
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage); 
+      setSources([]); 
+    }
     finally { setLoading(false); }
   }, []);
 
@@ -68,10 +65,20 @@ const SourcesPage: React.FC = () => {
   }, [openDropdownSourceId]);
 
 
-  const formatDate = (dateString?: string | Date) => { /* ... same ... */
+  const formatDate = (dateString?: string | Date) => {
     if (!dateString) return 'N/A';
-    try { return new Date(dateString).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-    catch (e) { return String(dateString); }
+    try { 
+      return new Date(dateString).toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }); 
+    }
+    catch {
+      return String(dateString);
+    }
   };
   const handleAddSourceClick = () => setIsAddModalOpen(true);
   const handleAddModalClose = () => setIsAddModalOpen(false);
@@ -88,7 +95,10 @@ const SourcesPage: React.FC = () => {
       const res = await fetch(`/api/${sourceId}`, { method: 'DELETE' });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       fetchSources();
-    } catch (e: any) { setActionError(`Deleting "${sourceName}": ${e.message}`); }
+    } catch (error: unknown) { 
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setActionError(`Deleting "${sourceName}": ${errorMessage}`); 
+    }
     finally { setIsSubmittingAction(null); }
   };
 
@@ -99,7 +109,10 @@ const SourcesPage: React.FC = () => {
       const res = await fetch(`/api/${sourceId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isEnabled: !currentIsEnabled }) });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       fetchSources();
-    } catch (e: any) { setActionError(`Toggling "${sourceName}": ${e.message}`); }
+    } catch (error: unknown) { 
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setActionError(`Toggling "${sourceName}": ${errorMessage}`); 
+    }
     finally { setIsSubmittingAction(null); }
   };
 
@@ -111,7 +124,10 @@ const SourcesPage: React.FC = () => {
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       alert(`Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}`);
       fetchSources();
-    } catch (e: any) { setActionError(`Fetching "${sourceName}": ${e.message}`); }
+    } catch (error: unknown) { 
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setActionError(`Fetching "${sourceName}": ${errorMessage}`); 
+    }
     finally { setIsSubmittingAction(null); }
   };
 

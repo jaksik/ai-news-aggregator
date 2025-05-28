@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout'; // Adjusted path
-import { IFetchRunLog, IProcessingSummarySubdoc, IItemErrorSubdoc } from '../../../models/FetchRunLog'; // Adjusted path
+import { IFetchRunLog, IProcessingSummarySubdoc } from '../../../models/FetchRunLog'; // Adjusted path
 
 interface FetchLogDetailApiResponse {
   log?: IFetchRunLog;
@@ -34,8 +34,9 @@ const LogDetailPage: React.FC = () => {
           }
           const data: FetchLogDetailApiResponse = await response.json();
           setLog(data.log || null);
-        } catch (err: any) {
-          setError(err.message);
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+          setError(errorMessage);
           console.error(`Failed to fetch log details for ${runId}:`, err);
           setLog(null);
         } finally {
@@ -54,8 +55,25 @@ const LogDetailPage: React.FC = () => {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
-  const getStatusBadgeColor = (status: IFetchRunLog['status'] | IProcessingSummarySubdoc['status']) => { /* ... same ... */ };
-  const renderItemErrors = (errors: IItemErrorSubdoc[] | undefined) => { /* ... same ... */ };
+
+  const getStatusBadgeColor = (status: IFetchRunLog['status'] | IProcessingSummarySubdoc['status']) => {
+    switch (status) {
+      case 'success':
+        return 'bg-green-100 text-green-700 border-green-300';
+      case 'partial_success':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+      case 'failed':
+        return 'bg-red-100 text-red-700 border-red-300';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'completed':
+        return 'bg-green-100 text-green-700 border-green-300';
+      case 'completed_with_errors':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-300';
+    }
+  };
 
   if (!router.isReady || loading) {
     // Wrap loading message in layout for consistency, or let layout handle global loading state later

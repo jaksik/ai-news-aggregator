@@ -40,9 +40,10 @@ const FetchAllSourcesControl: React.FC = () => {
       }
 
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Fetch all sources error:', err);
-      setError(err.message || 'An unexpected error occurred.');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setError(errorMessage);
       setStatusMessage(null); // Clear status message on error
     } finally {
       setIsFetching(false);
