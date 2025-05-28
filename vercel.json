@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/fetch-all-sources",
+      "schedule": "0 15 * * *",  
+      "timezone": "America/Chicago",
+      "headers": {
+        "Authorization": "Bearer $CRON_SECRET" 
+      }
+    }
+  ]
+}

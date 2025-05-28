@@ -11,26 +11,24 @@ export default async function handler(
   if (req.method === 'POST') {
     // --- Authorization Check ---
     const expectedSecret = process.env.CRON_SECRET;
-    const authHeader = req.headers.authorization; // Expect "Bearer YOUR_SECRET"
-    let providedSecret: string | undefined;
+    const isDevelopment = process.env.NODE_ENV === 'development';
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      providedSecret = authHeader.substring(7); // Extract token after "Bearer "
-    } else if (req.query.cron_secret) {
-      // Fallback or alternative: check query parameter (less secure for secrets in URLs)
-      providedSecret = req.query.cron_secret as string;
-    }
+    // Skip auth entirely in development, or require it everywhere
+    if (!isDevelopment && expectedSecret) {
+      const authHeader = req.headers.authorization; // Expect "Bearer YOUR_SECRET"
+      let providedSecret: string | undefined;
 
-    // If CRON_SECRET is set in .env.local, then we enforce the check
-    if (expectedSecret && providedSecret !== expectedSecret) {
-      console.warn('API /api/fetch-all-sources: Unauthorized attempt with invalid or missing secret.');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    // If CRON_SECRET is NOT set in .env.local, we might allow requests for local dev/testing
-    // OR you could make it strictly required always. For now, this allows it if not set.
-    if (expectedSecret && !providedSecret) {
-        console.warn('API /api/fetch-all-sources: Missing secret for protected endpoint.');
-        // return res.status(401).json({ error: 'Unauthorized: Secret required' });
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        providedSecret = authHeader.substring(7); // Extract token after "Bearer "
+      } else if (req.query.cron_secret) {
+        // Fallback or alternative: check query parameter (less secure for secrets in URLs)
+        providedSecret = req.query.cron_secret as string;
+      }
+
+      if (providedSecret !== expectedSecret) {
+        console.warn('API /api/fetch-all-sources: Unauthorized attempt with invalid or missing secret.');
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
     }
     // --- End Authorization Check ---
 
