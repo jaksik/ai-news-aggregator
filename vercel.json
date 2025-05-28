@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/fetch-all-sources",
-      "schedule": "20 30 * * *"
+      "schedule": "30 20 * * *"
     }
   ]
 }
