@@ -146,7 +146,7 @@ export async function fetchParseAndStoreSource( // Make sure this is EXPORTED
                 summary.message = "No items found in RSS feed.";
             } else {
                 summary.status = 'success';
-                summary.message = `Successfully processed ${summary.itemsProcessed} RSS items. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
+                summary.message = `Processed ${summary.itemsProcessed} RSS items. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
             }
 
 
