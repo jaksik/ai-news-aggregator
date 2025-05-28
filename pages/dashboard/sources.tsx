@@ -1,65 +1,38 @@
 // File: pages/dashboard/sources.tsx
 import React, { useEffect, useState, useCallback } from 'react';
-import Head from 'next/head';
+// Remove Head from here if DashboardLayout handles the main title
+import DashboardLayout from '../../components/dashboard/DashboardLayout'; // Adjust path
 import { ISource } from '../../models/Source';
 import AddSourceModal from '../../components/dashboard/AddSourceModal';
-import EditSourceModal from '../../components/dashboard/EditSourceModal'; // Import the new Edit modal
+import EditSourceModal from '../../components/dashboard/EditSourceModal';
 
-// ... (FetchSourcesApiResponse interface remains the same) ...
-interface FetchSourcesApiResponse {
-  sources?: ISource[];
-  error?: string;
-  message?: string;
-}
-
-
-// File: pages/dashboard/sources.tsx
-// ... (other imports and state variables as before) ...
+// ... (FetchSourcesApiResponse interface and rest of your component logic: useState, fetchSources, handlers, etc.)
 
 const SourcesPage: React.FC = () => {
-  // ... (useState, fetchSources, formatDate, modal handlers, handleDelete, handleToggleEnable as before) ...
+  // ... all your existing state and functions for SourcesPage ...
   const [sources, setSources] = useState<ISource[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSubmittingAction, setIsSubmittingAction] = useState<string | null>(null);
-  
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [sourceToEdit, setSourceToEdit] = useState<ISource | null>(null);
 
-  const fetchSources = useCallback(async () => { /* ... same ... */ 
-    setLoading(true);
-    setError(null);
-    setActionError(null);
+  const fetchSources = useCallback(async () => { /* ... your existing fetchSources ... */ 
+    setLoading(true); setError(null); setActionError(null);
     try {
       const response = await fetch('/api/sources');
-      if (!response.ok) {
-        const errorData: FetchSourcesApiResponse = await response.json();
-        throw new Error(errorData.error || errorData.message || `Failed to fetch sources: ${response.status}`);
-      }
-      const data: FetchSourcesApiResponse = await response.json();
-      setSources(data.sources || []);
-    } catch (err: any) {
-      setError(err.message);
-      console.error("Failed to fetch sources:", err);
-      setSources([]);
-    } finally {
-      setLoading(false);
-    }
+      if (!response.ok) { const d = await response.json(); throw new Error(d.error || 'Failed'); }
+      const data = await response.json(); setSources(data.sources || []);
+    } catch (e:any) { setError(e.message); setSources([]); } 
+    finally { setLoading(false); }
   }, []);
-
   useEffect(() => { fetchSources(); }, [fetchSources]);
-  const formatDate = (dateString?: string | Date) => { /* ... same ... */ 
+  const formatDate = (dateString?: string | Date) => { /* ... */ 
     if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      });
-    } catch (e) {
-      return String(dateString);
-    }
+    try { return new Date(dateString).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } 
+    catch (e) { return String(dateString); }
   };
   const handleAddSourceClick = () => setIsAddModalOpen(true);
   const handleAddModalClose = () => setIsAddModalOpen(false);
@@ -67,103 +40,46 @@ const SourcesPage: React.FC = () => {
   const handleEditModalOpen = (source: ISource) => { setSourceToEdit(source); setIsEditModalOpen(true); };
   const handleEditModalClose = () => { setIsEditModalOpen(false); setSourceToEdit(null); };
   const handleSourceUpdated = () => { fetchSources(); };
-  const handleDelete = async (sourceId: string, sourceName: string) => { /* ... same ... */ 
-    if (!window.confirm(`Are you sure you want to delete the source "${sourceName}"? This action cannot be undone.`)) {
-      return;
-    }
-    setIsSubmittingAction(sourceId);
-    setActionError(null);
+  const handleDelete = async (sourceId: string, sourceName: string) => { /* ... */ 
+    if (!window.confirm(`Delete "${sourceName}"?`)) return;
+    setIsSubmittingAction(sourceId); setActionError(null);
     try {
-      const response = await fetch(`/api/${sourceId}`, { method: 'DELETE' });
-      const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(responseData.error || responseData.message || 'Failed to delete source');
-      }
-      fetchSources(); 
-    } catch (err: any) {
-      console.error("Delete error:", err);
-      setActionError(`Error deleting source "${sourceName}": ${err.message}`);
-    } finally {
-      setIsSubmittingAction(null);
-    }
-  };
-  const handleToggleEnable = async (sourceId: string, currentIsEnabled: boolean, sourceName: string) => { /* ... same ... */
-    setIsSubmittingAction(sourceId);
-    setActionError(null);
-    try {
-      const response = await fetch(`/api/${sourceId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isEnabled: !currentIsEnabled }),
-      });
-      const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(responseData.error || responseData.message || 'Failed to toggle source status');
-      }
+      const res = await fetch(`/api/${sourceId}`, { method: 'DELETE' });
+      const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       fetchSources();
-    } catch (err: any) {
-      console.error("Toggle error:", err);
-      setActionError(`Error toggling status for "${sourceName}": ${err.message}`);
-    } finally {
-      setIsSubmittingAction(null);
-    }
+    } catch (e:any) { setActionError(`Deleting "${sourceName}": ${e.message}`); }
+    finally { setIsSubmittingAction(null); }
   };
-
-  // --- UPDATED handleFetchNow ---
-  const handleFetchNow = async (sourceId: string, sourceName: string) => {
-    setIsSubmittingAction(sourceId);
-    setActionError(null);
-    // You could add a more specific success message state if desired
-    // For now, we'll rely on the list refresh and potential actionError.
+  const handleToggleEnable = async (sourceId: string, currentIsEnabled: boolean, sourceName: string) => { /* ... */ 
+    setIsSubmittingAction(sourceId); setActionError(null);
     try {
-      const response = await fetch(`/api/sources/${sourceId}/fetch-now`, {
-        method: 'POST',
-      });
-      const resultData = await response.json(); // This will be the ProcessingSummary
-
-      if (!response.ok) {
-        throw new Error(resultData.error || resultData.message || `Failed to trigger fetch for source "${sourceName}"`);
-      }
-      
-      // alert(`Fetch triggered for ${sourceName}. Added: ${resultData.newItemsAdded}, Skipped: ${resultData.itemsSkipped}`);
-      console.log(`Fetch result for ${sourceName}:`, resultData);
-      // Refresh the sources list to show updated lastFetchedAt, lastStatus, etc.
-      fetchSources(); 
-      // You might also want to trigger a refresh of your main articles dashboard if it's separate,
-      // or show a more prominent notification about new articles.
-      // For now, an alert or console log and list refresh is a good start.
-      alert(`Fetch completed for "${sourceName}". Status: ${resultData.status}. New articles: ${resultData.newItemsAdded}.`);
-
-    } catch (err: any) {
-      console.error(`Fetch Now error for ${sourceName}:`, err);
-      setActionError(`Error triggering fetch for "${sourceName}": ${err.message}`);
-      // alert(`Error fetching source: ${err.message}`);
-    } finally {
-      setIsSubmittingAction(null);
-    }
+      const res = await fetch(`/api/${sourceId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isEnabled: !currentIsEnabled})});
+      const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
+      fetchSources();
+    } catch (e:any) { setActionError(`Toggling "${sourceName}": ${e.message}`); }
+    finally { setIsSubmittingAction(null); }
   };
-  // --- End UPDATED handleFetchNow ---
+  const handleFetchNow = async (sourceId: string, sourceName: string) => { /* ... */ 
+    setIsSubmittingAction(sourceId); setActionError(null);
+    try {
+      const res = await fetch(`/api/sources/${sourceId}/fetch-now`, { method: 'POST' });
+      const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
+      alert(`Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}`);
+      fetchSources();
+    } catch (e:any) { setActionError(`Fetching "${sourceName}": ${e.message}`); }
+    finally { setIsSubmittingAction(null); }
+  };
+
 
   return (
-    <>
-      {/* ... (Head and page structure as before) ... */}
-      {/* In your table row, update the "Fetch Now" button's onClick: */}
-      {/* ...
-        <button 
-          onClick={() => handleFetchNow(source._id!.toString(), source.name)} // Pass source.name too
-          disabled={isSubmittingAction === source._id?.toString()}
-          className="text-teal-500 hover:text-teal-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">
-            Fetch
-        </button>
-      ... */}
-
-      {/* Full return JSX for completeness (ensure your table row for actions calls the updated handleFetchNow) */}
-      <Head>
-        <title>Manage Sources - News Aggregator</title>
-      </Head>
-      <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen bg-gray-50">
-        <header className="mb-8 flex flex-col sm:flex-row justify-between items-center">
-          <div className="mb-4 sm:mb-0 text-center sm:text-left">
+    <DashboardLayout pageTitle="Manage Sources - My Aggregator">
+      {/* No need for <Head> here as DashboardLayout handles it.
+        The container, mx-auto, p-4 etc. are now handled by DashboardLayout's <main> tag.
+        So you start directly with your page-specific content.
+      */}
+      <header className="mb-8 flex flex-col sm:flex-row justify-between items-center">
+        {/* ... your header content for this page (title, Add New Source button) ... */}
+        <div className="mb-4 sm:mb-0 text-center sm:text-left">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Manage News Sources</h1>
             <p className="text-md md:text-lg text-gray-600">Configure your RSS feeds and websites.</p>
           </div>
@@ -173,9 +89,10 @@ const SourcesPage: React.FC = () => {
           >
             + Add New Source
           </button>
-        </header>
+      </header>
 
-        {loading && ( 
+      {/* Loading, Error, Table, and Modals JSX as you had it before */}
+      {loading && ( /* ... Loading UI ... */ 
           <div className="flex justify-center items-center h-64">
             <p className="text-xl text-gray-500">Loading sources...</p>
           </div>
@@ -194,6 +111,7 @@ const SourcesPage: React.FC = () => {
             <p>{actionError}</p>
           </div>
         )}
+
 
         {!loading && !error && (
           <>
@@ -283,7 +201,7 @@ const SourcesPage: React.FC = () => {
                               Delete
                           </button>
                           <button 
-                            onClick={() => handleFetchNow(source._id!.toString(), source.name)} 
+                            onClick={() => handleFetchNow(source._id!.toString(), source.name)}
                             disabled={isSubmittingAction === source._id?.toString()}
                             className="text-teal-500 hover:text-teal-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">
                               Fetch
@@ -297,8 +215,8 @@ const SourcesPage: React.FC = () => {
             )}
           </>
         )}
-      </div>
 
+      {/* Render Modals */}
       <AddSourceModal
         isOpen={isAddModalOpen}
         onClose={handleAddModalClose}
@@ -310,7 +228,7 @@ const SourcesPage: React.FC = () => {
         onSourceUpdated={handleSourceUpdated}
         sourceToEdit={sourceToEdit}
       />
-    </>
+    </DashboardLayout>
   );
 };
 
