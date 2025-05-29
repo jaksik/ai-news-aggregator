@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
-// Interface describing the properties of an Article document
 export interface IArticle extends Document {
   title: string;
   link: string; // This should be unique to prevent duplicate articles
@@ -11,11 +10,7 @@ export interface IArticle extends Document {
   fetchedAt: Date; // When your aggregator fetched this article
   isRead: boolean;
   isStarred: boolean;
-  isHidden: boolean; // <-- NEW FIELD
-  // You can add more fields as needed:
-  // content?: string; // If you plan to store the full article content
-  // imageUrl?: string;
-  // categories?: string[];
+  isHidden: boolean; 
 }
 
 const ArticleSchema: Schema<IArticle> = new Schema(
@@ -66,14 +61,11 @@ const ArticleSchema: Schema<IArticle> = new Schema(
       type: Boolean,
       default: false,
     },
-    isHidden: { // <-- NEW FIELD DEFINITION
+    isHidden: { 
       type: Boolean,
-      default: false, // Articles are visible by default
-      index: true,    // Good to index if you'll query often for `isHidden: false`
+      default: false, 
+      index: true,   
     },
-    // content: String,
-    // imageUrl: String,
-    // categories: [String],
   },
   {
     timestamps: true, // Adds createdAt and updatedAt timestamps automatically
