@@ -1,7 +1,7 @@
-// File: pages/api/articles.ts
+// File: pages/api/articles/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../lib/mongodb';
-import Article, { IArticle } from '../../models/Article';
+import dbConnect from '../../../lib/mongodb';
+import Article, { IArticle } from '../../../models/Article';
 
 type Data = {
   articles?: IArticle[];
@@ -21,7 +21,7 @@ export default async function handler(
         .limit(100)
         .lean();
       res.status(200).json({ articles: articles as IArticle[] });
-    } catch (error: unknown) { // Changed 'any' to 'unknown'
+    } catch (error: unknown) {
       console.error('API /api/articles error:', error);
       let errorMessage = "Failed to fetch articles from database";
       if (error instanceof Error) {
@@ -29,7 +29,6 @@ export default async function handler(
       } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      // You could log the 'error' object itself if it's not an Error instance for more details
       res.status(500).json({ error: 'Failed to fetch articles from database', message: errorMessage });
     }
   } else {

@@ -16,7 +16,7 @@ const FetchAllSourcesControl: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/fetch-all-sources', {
+      const response = await fetch('/api/fetch/all-sources', {
         method: 'POST',
         // No body needed for this request
       });

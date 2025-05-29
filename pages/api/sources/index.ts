@@ -1,14 +1,14 @@
+// File: pages/api/sources/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../lib/mongodb'; // Your Mongoose connection utility
-import Source, { ISource } from '../../models/Source'; // Your Source Mongoose model
+import dbConnect from '../../../lib/mongodb';
+import Source, { ISource } from '../../../models/Source';
 
-// Updated ResponseData to potentially include a single source (for POST) or validation errors
 type ResponseData = {
-  sources?: ISource[];  // For GET list
-  source?: ISource;     // For POST success (the created source)
+  sources?: ISource[];
+  source?: ISource;
   message?: string;
   error?: string;
-  errors?: Record<string, unknown>;       // For Mongoose validation errors
+  errors?: Record<string, unknown>;
 }
 
 export default async function handler(
@@ -16,7 +16,7 @@ export default async function handler(
   res: NextApiResponse<ResponseData>
 ) {
   try {
-    await dbConnect(); // Ensure DB connection for all methods
+    await dbConnect();
   } catch (error: unknown) {
     console.error('API /api/sources - DB Connection Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
@@ -34,6 +34,7 @@ export default async function handler(
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return res.status(500).json({ error: 'Failed to fetch sources', message: errorMessage });
     }
+
   } else if (req.method === 'POST') {
     try {
       const { name, url, type, isEnabled } = req.body;
@@ -47,15 +48,14 @@ export default async function handler(
       }
 
       // Create a new source document
-      // Mongoose will apply schema validations (e.g., unique URL, required fields)
       const newSource = new Source({
         name,
         url,
         type,
-        isEnabled: isEnabled !== undefined ? Boolean(isEnabled) : true, // Default to true if not provided
+        isEnabled: isEnabled !== undefined ? Boolean(isEnabled) : true,
       });
 
-      const savedSource = await newSource.save(); // This will throw an error if validation fails
+      const savedSource = await newSource.save();
 
       return res.status(201).json({ message: 'Source created successfully', source: savedSource });
 
@@ -81,8 +81,8 @@ export default async function handler(
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return res.status(500).json({ error: 'Failed to create source', message: errorMessage });
     }
+
   } else {
-    // Update Allow header for other methods
     res.setHeader('Allow', ['GET', 'POST']);
     res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }

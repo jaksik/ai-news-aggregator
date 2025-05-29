@@ -1,9 +1,9 @@
+// File: pages/api/fetch-logs/[runId]/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import mongoose from 'mongoose'; // To validate ObjectId
-import dbConnect from '../../../lib/mongodb'; // Adjust path: up three levels
-import FetchRunLog, { IFetchRunLog } from '../../../models/FetchRunLog'; // Adjust path: up three levels
+import mongoose from 'mongoose';
+import dbConnect from '../../../../lib/mongodb';
+import FetchRunLog, { IFetchRunLog } from '../../../../models/FetchRunLog';
 
-// Define a type for the response data
 type Data = {
   log?: IFetchRunLog;
   error?: string;
@@ -14,15 +14,15 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  const { runId } = req.query; // Get the runId from the URL path (e.g., [runId].ts)
+  const { runId } = req.query;
 
-  // 1. Validate the runId from the query
+  // Validate the runId from the query
   if (!runId || Array.isArray(runId) || !mongoose.Types.ObjectId.isValid(runId as string)) {
     return res.status(400).json({ error: 'Invalid or missing run ID in URL path.' });
   }
   const idToFetch = runId as string;
 
-  // 2. Ensure Database Connection
+  // Ensure Database Connection
   try {
     await dbConnect();
   } catch (error: unknown) {
@@ -31,11 +31,11 @@ export default async function handler(
     return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
   }
 
-  // 3. Handle GET request to fetch a single log by its ID
+  // Handle GET request to fetch a single log by its ID
   if (req.method === 'GET') {
     try {
       console.log(`API /api/fetch-logs/${idToFetch}: Attempting to find log by ID.`);
-      const log = await FetchRunLog.findById(idToFetch).lean(); // Use .lean() for performance
+      const log = await FetchRunLog.findById(idToFetch).lean();
 
       if (!log) {
         console.log(`API /api/fetch-logs/${idToFetch}: Log not found.`);
@@ -43,7 +43,7 @@ export default async function handler(
       }
 
       console.log(`API /api/fetch-logs/${idToFetch}: Log found.`);
-      res.status(200).json({ log: log as IFetchRunLog }); // Cast because .lean()
+      res.status(200).json({ log: log as IFetchRunLog });
 
     } catch (error: unknown) {
       console.error(`API /api/fetch-logs/${idToFetch} GET Error:`, error);

@@ -120,7 +120,7 @@ const SourcesPage: React.FC = () => {
     setOpenDropdownSourceId(null); // Close dropdown first
     setIsSubmittingAction(sourceId); setActionError(null);
     try { /* ... same fetch now logic ... */
-      const res = await fetch(`/api/sources/${sourceId}/fetch-now`, { method: 'POST' });
+      const res = await fetch(`/api/sources/${sourceId}/fetch`, { method: 'POST' });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       alert(`Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}`);
       fetchSources();
