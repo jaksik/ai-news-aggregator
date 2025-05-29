@@ -1,6 +1,7 @@
+// File: pages/api/articles/external/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../lib/mongodb';
-import Article, { IArticle } from '../../models/Article';
+import dbConnect from '../../../../lib/mongodb';
+import Article, { IArticle } from '../../../../models/Article';
 
 type ResponseData = {
   article?: IArticle;
@@ -21,7 +22,7 @@ export default async function handler(
   try {
     await dbConnect();
   } catch (error: unknown) {
-    console.error('API /api/articles/submit - DB Connection Error:', error);
+    console.error('API /api/articles/external - DB Connection Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Database connection failed';
     return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
   }
@@ -73,7 +74,7 @@ export default async function handler(
     });
 
   } catch (error: unknown) {
-    console.error('API /api/articles/submit POST Error:', error);
+    console.error('API /api/articles/external POST Error:', error);
     
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ValidationError') {
       const validationError = error as unknown as { message: string; errors: Record<string, unknown> };

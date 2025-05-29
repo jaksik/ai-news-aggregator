@@ -38,3 +38,25 @@ https://elevenlabs.io/blog
 ===========Possible================
 ====================================
 https://www.unite.ai/feed/
+
+
+
+pages/api/
+├── articles/
+│   ├── index.ts                    # GET /api/articles (list all)
+│   ├── [articleId]/
+│   │   └── index.ts               # PUT/DELETE /api/articles/[articleId]
+│   └── external/
+│       └── index.ts               # POST /api/articles/external (create external article)
+├── sources/
+│   ├── index.ts                   # GET/POST /api/sources
+│   └── [sourceId]/
+│       ├── index.ts               # PUT/DELETE /api/sources/[sourceId]
+│       └── fetch.ts               # POST /api/sources/[sourceId]/fetch
+├── fetch-logs/
+│   ├── index.ts                   # GET /api/fetch-logs
+│   └── [runId]/
+│       └── index.ts               # GET /api/fetch-logs/[runId]
+├── fetch/
+│   ├── all-sources.ts             # POST /api/fetch/all-sources
+│   └── test.ts      

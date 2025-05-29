@@ -1,11 +1,9 @@
-// File: pages/api/[sourceId].ts
+// File: pages/api/sources/[sourceId]/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
-import dbConnect from '../../lib/mongodb'; // Ensure this path is correct
-import Source, { ISource } from '../../models/Source';   // Ensure this path is correct
+import dbConnect from '../../../../lib/mongodb';
+import Source, { ISource } from '../../../../models/Source';
 
-// For Mongoose validation errors, the 'errors' property has a specific structure.
-// We can define a more specific type or use a general one for now.
 interface MongooseValidationError {
     [key: string]: {
         message: string;
@@ -26,7 +24,7 @@ type ResponseData = {
   source?: ISource;
   message?: string;
   error?: string;
-  errors?: MongooseValidationError | Record<string, unknown>; // More specific type for Mongoose validation errors
+  errors?: MongooseValidationError | Record<string, unknown>;
 }
 
 export default async function handler(
@@ -42,8 +40,8 @@ export default async function handler(
 
   try {
     await dbConnect();
-  } catch (error: unknown) { // Changed 'any' to 'unknown'
-    console.error(`API /api/${id} - DB Connection Error:`, error);
+  } catch (error: unknown) {
+    console.error(`API /api/sources/${id} - DB Connection Error:`, error);
     let message = 'Database connection failed';
     if (error instanceof Error) {
         message = error.message;
@@ -82,8 +80,8 @@ export default async function handler(
 
       return res.status(200).json({ message: 'Source updated successfully', source: updatedSource });
 
-    } catch (error: unknown) { // Changed 'any' to 'unknown'
-      console.error(`API /api/${id} PUT Error:`, error);
+    } catch (error: unknown) {
+      console.error(`API /api/sources/${id} PUT Error:`, error);
       if (error instanceof mongoose.Error.ValidationError) {
         return res.status(400).json({ error: 'Validation failed', message: error.message, errors: error.errors });
       }
@@ -97,6 +95,7 @@ export default async function handler(
       }
       return res.status(500).json({ error: 'Failed to update source', message });
     }
+
   } else if (req.method === 'DELETE') {
     try {
       const deletedSource = await Source.findByIdAndDelete(id);
@@ -107,17 +106,17 @@ export default async function handler(
 
       return res.status(200).json({ message: 'Source deleted successfully', source: deletedSource });
 
-    } catch (error: unknown) { // Changed 'any' to 'unknown'
-      console.error(`API /api/${id} DELETE Error:`, error);
+    } catch (error: unknown) {
+      console.error(`API /api/sources/${id} DELETE Error:`, error);
       let message = 'Failed to delete source';
       if (error instanceof Error) {
         message = error.message;
       }
       return res.status(500).json({ error: 'Failed to delete source', message });
     }
-  }
-  else {
+
+  } else {
     res.setHeader('Allow', ['PUT', 'DELETE']);
-    res.status(405).json({ error: `Method ${req.method} Not Allowed on /api/${id}` });
+    res.status(405).json({ error: `Method ${req.method} Not Allowed on /api/sources/${id}` });
   }
 }

@@ -1,6 +1,6 @@
+// File: pages/api/sources/[sourceId]/fetch.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
-// Adjust paths: up four levels from pages/api/sources/[sourceId]/
 import dbConnect from '../../../../lib/mongodb';
 import Source from '../../../../models/Source';
 import { fetchParseAndStoreSource, ProcessingSummary, SourceToFetch } from '../../../../lib/services/fetcher';
@@ -18,7 +18,7 @@ export default async function handler(
   }
   const id = sourceId as string;
 
-  if (req.method === 'POST') { // We'll use POST for this action
+  if (req.method === 'POST') {
     try {
       await dbConnect();
       const sourceDoc = await Source.findById(id);
@@ -27,7 +27,6 @@ export default async function handler(
         return res.status(404).json({ error: 'Source not found with the provided ID.' });
       }
 
-      // You could choose to respect sourceDoc.isEnabled here or allow manual fetch even if disabled
       console.log(`API: Manually triggering fetch for source: ${sourceDoc.name}`);
 
       const sourceToFetchData: SourceToFetch = {
@@ -54,10 +53,11 @@ export default async function handler(
       return res.status(200).json(processingResult);
 
     } catch (error: unknown) {
-      console.error(`API /api/sources/${id}/fetch-now POST Error:`, error);
+      console.error(`API /api/sources/${id}/fetch POST Error:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return res.status(500).json({ error: 'Failed to trigger fetch for source', message: errorMessage });
     }
+
   } else {
     res.setHeader('Allow', ['POST']);
     res.status(405).json({ error: `Method ${req.method} Not Allowed` });

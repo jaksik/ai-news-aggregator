@@ -1,8 +1,8 @@
+// File: pages/api/fetch-logs/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../lib/mongodb'; // Your Mongoose connection utility
-import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog'; // Your FetchRunLog Mongoose model
+import dbConnect from '../../../lib/mongodb';
+import FetchRunLog, { IFetchRunLog } from '../../../models/FetchRunLog';
 
-// Define a type for the response data
 type Data = {
   logs?: IFetchRunLog[];
   totalLogs?: number;
