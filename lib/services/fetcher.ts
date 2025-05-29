@@ -61,7 +61,7 @@ export async function fetchParseAndStoreSource(
     source: SourceToFetch
 ): Promise<ProcessingSummary> {
     // Read the limit from environment variable, with a default (e.g., null if not set or invalid)
-    const maxArticlesLimitString = '5';
+    const maxArticlesLimitString = '10';
     const maxArticlesLimit = maxArticlesLimitString ? parseInt(maxArticlesLimitString, 10) : null;
     // Ensure maxArticlesLimit is a positive number, otherwise null (no limit)
     const effectiveMaxArticles = (maxArticlesLimit && maxArticlesLimit > 0) ? maxArticlesLimit : null;

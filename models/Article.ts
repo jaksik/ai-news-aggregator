@@ -11,6 +11,7 @@ export interface IArticle extends Document {
   fetchedAt: Date; // When your aggregator fetched this article
   isRead: boolean;
   isStarred: boolean;
+  isHidden: boolean; // <-- NEW FIELD
   // You can add more fields as needed:
   // content?: string; // If you plan to store the full article content
   // imageUrl?: string;
@@ -64,6 +65,11 @@ const ArticleSchema: Schema<IArticle> = new Schema(
     isStarred: {
       type: Boolean,
       default: false,
+    },
+    isHidden: { // <-- NEW FIELD DEFINITION
+      type: Boolean,
+      default: false, // Articles are visible by default
+      index: true,    // Good to index if you'll query often for `isHidden: false`
     },
     // content: String,
     // imageUrl: String,
