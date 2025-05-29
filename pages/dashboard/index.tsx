@@ -37,6 +37,37 @@ const MainDashboardPage: React.FC = () => {
     }
   }, []); // Empty dependency array, fetchArticles itself is stable
 
+  // Add a new callback to handle article visibility changes locally
+  const handleArticleVisibilityChange = useCallback(async (articleId: string, isHidden: boolean) => {
+    try {
+      // Update the article visibility on the server
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: 'PUT', // Changed from 'PATCH' to 'PUT'
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isHidden }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Update the local state immediately without refetching
+      setArticles(prevArticles => 
+        prevArticles.map(article => 
+          article._id === articleId 
+            ? { ...article, isHidden } as IArticle
+            : article
+        )
+      );
+    } catch (err) {
+      console.error('Failed to update article visibility:', err);
+      // Optionally show an error message to the user
+    }
+  }, []);
+
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
@@ -69,7 +100,7 @@ const MainDashboardPage: React.FC = () => {
       {!loading && !error && articles.length > 0 && (
         <ArticleList 
           articles={articles} 
-          onArticleVisibilityChange={fetchArticles}
+          onArticleVisibilityChange={handleArticleVisibilityChange}
         />
       )}
     </DashboardLayout>
