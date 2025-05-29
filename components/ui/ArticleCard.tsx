@@ -14,10 +14,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityC
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return 'N/A';
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric',
-        // hour: '2-digit', minute: '2-digit', // Simpler date for card view
-      });
+      const date = new Date(dateString);
+      // Use UTC methods to avoid timezone conversion
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        timeZone: 'UTC'
+      }).format(date);
     } catch {
       return String(dateString);
     }
