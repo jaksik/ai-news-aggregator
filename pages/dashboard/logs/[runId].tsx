@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout'; // Adjusted path
+import AuthWrapper from '../../../components/auth/AuthWrapper';
 import { IFetchRunLog, IProcessingSummarySubdoc } from '../../../models/FetchRunLog'; // Adjusted path
 
 interface FetchLogDetailApiResponse {
@@ -111,7 +112,8 @@ const LogDetailPage: React.FC = () => {
     : 'N/A';
 
   return (
-    <DashboardLayout pageTitle={`Run Details: ${formatDate(log.startTime)}`}>
+    <AuthWrapper>
+      <DashboardLayout pageTitle={`Run Details: ${formatDate(log.startTime)}`}>
         {/* The <Head> for title is handled by DashboardLayout.
             The main container div is also handled by DashboardLayout's <main> tag.
         */}
@@ -188,7 +190,8 @@ const LogDetailPage: React.FC = () => {
         ) : (
           <p className="text-gray-600 italic">No source summaries were recorded for this run.</p>
         )}
-    </DashboardLayout>
+      </DashboardLayout>
+    </AuthWrapper>
   );
 };
 

@@ -1,7 +1,9 @@
 // File: components/dashboard/DashboardLayout.tsx
 import React, { ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { useSession, signOut } from 'next-auth/react';
 import Head from 'next/head';
 
 interface DashboardLayoutProps {
@@ -11,7 +13,7 @@ interface DashboardLayoutProps {
 
 // Add the new "Controls" page to your navigation items
 const navItems = [
-  { href: '/dashboard', label: 'Article Feed', icon: '📰' },
+  { href: '/dashboard/articles', label: 'Article Feed', icon: '📰' },
   { href: '/dashboard/sources', label: 'Manage Sources', icon: '⚙️' },
   { href: '/dashboard/logs', label: 'Fetch Logs', icon: '📊' },
   { href: '/dashboard/controls', label: 'Controls', icon: '🕹️' }, // <-- NEW LINK
@@ -20,6 +22,11 @@ const navItems = [
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle = "News Aggregator Dashboard" }) => {
   const router = useRouter();
+  const { data: session } = useSession();
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
 
   return (
     <>
@@ -56,7 +63,46 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
               ))}
             </ul>
           </nav>
-          <div className="mt-auto pt-6 border-t border-slate-700">
+          
+          {/* User Info and Sign Out */}
+          <div className="mt-auto pt-6 border-t border-slate-700 space-y-3">
+            {session?.user && (
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-2">
+                  {session.user.image ? (
+                    <div className="w-8 h-8 rounded-full mr-2 overflow-hidden bg-slate-600 flex-shrink-0">
+                      <Image 
+                        src={session.user.image} 
+                        alt="User avatar"
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full mr-2 bg-slate-600 flex items-center justify-center flex-shrink-0">
+                      <span className="text-slate-300 text-sm font-medium">
+                        {session.user.name?.charAt(0) || session.user.email?.charAt(0) || '?'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-slate-200 truncate">
+                      {session.user.name}
+                    </p>
+                    <p className="text-xs text-slate-400 truncate">
+                      {session.user.email}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors duration-200"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
             <p className="text-xs text-slate-500 text-center">&copy; {new Date().getFullYear()} Your Aggregator</p>
           </div>
         </aside>

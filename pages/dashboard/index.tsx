@@ -1,110 +1,211 @@
-// File: pages/dashboard/index.tsx
-import React, { useEffect, useState, useCallback } from 'react'; // Added useCallback
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import ArticleList from '../../components/dashboard/ArticleList';
-import { IArticle } from '../../models/Article';
+import AuthWrapper from '../../components/auth/AuthWrapper';
+import { ISource } from '../../models/Source';
 
-interface FetchArticlesApiResponse {
-  articles?: IArticle[];
-  error?: string;
-  message?: string;
+interface DashboardStats {
+  totalSources: number;
+  totalArticles: number;
+  recentFetches: number;
+  enabledSources: number;
 }
 
-const MainDashboardPage: React.FC = () => {
-  const [articles, setArticles] = useState<IArticle[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Memoize fetchArticles so it can be a stable dependency
-  const fetchArticles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/articles'); // This API needs to be updated later to filter hidden articles
-      if (!response.ok) {
-        const errorData: FetchArticlesApiResponse = await response.json();
-        throw new Error(errorData.error || errorData.message || `Failed to fetch articles: ${response.status}`);
-      }
-      const data: FetchArticlesApiResponse = await response.json();
-      setArticles(data.articles || []);
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      console.error("Failed to fetch articles for dashboard:", err);
-      setArticles([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []); // Empty dependency array, fetchArticles itself is stable
-
-  // Add a new callback to handle article visibility changes locally
-  const handleArticleVisibilityChange = useCallback(async (articleId: string, isHidden: boolean) => {
-    try {
-      // Update the article visibility on the server
-      const response = await fetch(`/api/articles/${articleId}`, {
-        method: 'PUT', // Changed from 'PATCH' to 'PUT'
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isHidden }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      // Update the local state immediately without refetching
-      setArticles(prevArticles => 
-        prevArticles.map(article => 
-          article._id === articleId 
-            ? { ...article, isHidden } as IArticle
-            : article
-        )
-      );
-    } catch (err) {
-      console.error('Failed to update article visibility:', err);
-      // Optionally show an error message to the user
-    }
-  }, []);
+const DashboardIndex: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalSources: 0,
+    totalArticles: 0,
+    recentFetches: 0,
+    enabledSources: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+    const fetchStats = async () => {
+      try {
+        // Fetch sources count
+        const sourcesResponse = await fetch('/api/sources');
+        const sourcesData = await sourcesResponse.json();
+        const sources = sourcesData.sources || [];
+        
+        // Fetch articles count
+        const articlesResponse = await fetch('/api/articles?limit=1');
+        const articlesData = await articlesResponse.json();
+        
+        // Fetch recent fetch logs
+        const logsResponse = await fetch('/api/fetch-logs?limit=5');
+        const logsData = await logsResponse.json();
+        
+        setStats({
+          totalSources: sources.length,
+          totalArticles: articlesData.totalArticles || 0,
+          recentFetches: (logsData.logs || []).length,
+          enabledSources: sources.filter((source: ISource) => source.isEnabled).length,
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
-    <DashboardLayout pageTitle="Article Feed - My Aggregator">
-      <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Aggregated News Feed</h1>
-        <p className="text-md md:text-lg text-gray-600">Your latest articles from various sources.</p>
-      </header>
+    <AuthWrapper>
+      <DashboardLayout pageTitle="Dashboard - News Aggregator">
+        <div className="space-y-8">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Dashboard</h1>
+            <p className="text-md md:text-lg text-gray-600 mt-2">
+              Welcome to your News Aggregator Dashboard
+            </p>
+          </div>
 
-      {loading && (
-        <div className="text-center py-8">
-          <p>Loading articles...</p>
-        </div>
-      )}
-      
-      {error && !loading && (
-        <div className="text-center py-8 text-red-600">
-          <p>Error: {error}</p>
-        </div>
-      )}
-      
-      {!loading && !error && articles.length === 0 && (
-        <div className="text-center py-8">
-          <p>No articles found.</p>
-        </div>
-      )}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Sources</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loading ? '...' : stats.totalSources}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-3xl">📰</span>
+                </div>
+              </div>
+            </div>
 
-      {!loading && !error && articles.length > 0 && (
-        <ArticleList 
-          articles={articles} 
-          onArticleVisibilityChange={handleArticleVisibilityChange}
-        />
-      )}
-    </DashboardLayout>
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Active Sources</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loading ? '...' : stats.enabledSources}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-3xl">✅</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Articles</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loading ? '...' : stats.totalArticles.toLocaleString()}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-3xl">📄</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+              <div className="flex items-center">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Recent Fetches</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {loading ? '...' : stats.recentFetches}
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-3xl">🔄</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Link
+                href="/dashboard/articles"
+                className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200 border border-blue-200"
+              >
+                <span className="text-2xl mr-3">📰</span>
+                <div>
+                  <h3 className="font-medium text-gray-800">View Articles</h3>
+                  <p className="text-sm text-gray-600">Browse your news feed</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/dashboard/sources"
+                className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200 border border-green-200"
+              >
+                <span className="text-2xl mr-3">⚙️</span>
+                <div>
+                  <h3 className="font-medium text-gray-800">Manage Sources</h3>
+                  <p className="text-sm text-gray-600">Add or edit news sources</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/dashboard/controls"
+                className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-200 border border-purple-200"
+              >
+                <span className="text-2xl mr-3">🕹️</span>
+                <div>
+                  <h3 className="font-medium text-gray-800">Control Center</h3>
+                  <p className="text-sm text-gray-600">Fetch and manage data</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/dashboard/logs"
+                className="flex items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors duration-200 border border-orange-200"
+              >
+                <span className="text-2xl mr-3">📊</span>
+                <div>
+                  <h3 className="font-medium text-gray-800">View Logs</h3>
+                  <p className="text-sm text-gray-600">Check fetch history</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* System Status */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">System Overview</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">●</span>
+                  <span className="font-medium text-gray-700">News Aggregation Service</span>
+                </div>
+                <span className="text-sm text-green-600 font-medium">Active</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <span className="text-green-500 mr-2">●</span>
+                  <span className="font-medium text-gray-700">Database Connection</span>
+                </div>
+                <span className="text-sm text-green-600 font-medium">Connected</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <span className="text-blue-500 mr-2">●</span>
+                  <span className="font-medium text-gray-700">Scheduled Fetches</span>
+                </div>
+                <span className="text-sm text-blue-600 font-medium">Running</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    </AuthWrapper>
   );
 };
 
-export default MainDashboardPage;
+export default DashboardIndex;
