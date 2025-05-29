@@ -5,7 +5,7 @@ import ArticleCard from '../ui/ArticleCard';
 
 interface ArticleListProps {
   articles: IArticle[];
-  onArticleVisibilityChange: () => void; // Add this prop
+  onArticleVisibilityChange: (articleId: string, isHidden: boolean) => void; // Fix the type signature
 }
 
 const ArticleList: React.FC<ArticleListProps> = ({ articles, onArticleVisibilityChange }) => {

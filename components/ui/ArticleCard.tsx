@@ -4,7 +4,7 @@ import { IArticle } from '../../models/Article'; // Adjust path if needed
 
 interface ArticleCardProps {
   article: IArticle;
-  onArticleVisibilityChange: () => void; // Callback to refresh the article list
+  onArticleVisibilityChange: (articleId: string, isHidden: boolean) => void; // Updated callback signature
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityChange }) => {
@@ -23,6 +23,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityC
     }
   };
 
+  const truncateText = (text: string, maxLength: number = 150) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
+  };
+
   const handleToggleHidden = async () => {
     if (!article._id) {
       setActionError("Article ID is missing.");
@@ -31,21 +36,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityC
     setIsUpdatingVisibility(true);
     setActionError(null);
     try {
-      const response = await fetch(`/api/articles/${article._id.toString()}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isHidden: !article.isHidden }),
-      });
-
-      const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(responseData.error || responseData.message || 'Failed to update article visibility');
-      }
-      onArticleVisibilityChange(); // Trigger refresh in the parent component
-      // No need to update local article state if parent re-fetches,
-      // but you could if you want an immediate optimistic update.
+      // Call the parent's callback function instead of making API call here
+      await onArticleVisibilityChange(article._id.toString(), !article.isHidden);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setActionError(errorMessage || 'Could not update visibility.');
@@ -70,7 +62,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityC
           <strong>Published:</strong> {formatDate(article.publishedDate)}
         </p>
         <p className={`text-gray-600 text-sm mb-4 flex-grow ${article.isHidden ? 'italic' : ''}`}>
-          {article.descriptionSnippet || 'No description available.'}
+          {truncateText(article.descriptionSnippet || 'No description available.')}
         </p>
         
         {actionError && <p className="text-xs text-red-500 mb-2">{actionError}</p>}
