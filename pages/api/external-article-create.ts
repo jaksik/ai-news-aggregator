@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import mongoose from 'mongoose';
 import dbConnect from '../../lib/mongodb';
 import Article, { IArticle } from '../../models/Article';
 
