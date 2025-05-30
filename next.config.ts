@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**', // Allow all HTTPS images for tools
+      },
+      {
+        protocol: 'http',
+        hostname: '**', // Allow all HTTP images for tools
+      },
     ],
   },
 };

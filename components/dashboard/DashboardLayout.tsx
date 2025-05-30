@@ -14,10 +14,14 @@ interface DashboardLayoutProps {
 // Add the new "Controls" page to your navigation items
 const navItems = [
   { href: '/dashboard/articles', label: 'Article Feed', icon: '📰' },
-  { href: '/dashboard/sources', label: 'Manage Sources', icon: '⚙️' },
+  { href: '/dashboard/sources', label: 'Manage Sources', icon: '🌐' },
   { href: '/dashboard/logs', label: 'Fetch Logs', icon: '📊' },
-  { href: '/dashboard/controls', label: 'Controls', icon: '🕹️' }, // <-- NEW LINK
-  // { href: '/dashboard/settings', label: 'Settings', icon: '🔧' }, // Future
+  { href: '/dashboard/controls', label: 'Fetch Controls', icon: '🕹️' },
+];
+
+const toolItems = [
+  { href: '/dashboard/tools', label: 'Tools', icon: '🛠️' },
+  { href: '/dashboard/tools/create', label: 'Create Tool', icon: '➕' },
 ];
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle = "News Aggregator Dashboard" }) => {
@@ -49,10 +53,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
                   <Link href={item.href} legacyBehavior>
                     <a
                       className={`flex items-center py-2.5 px-4 rounded-md transition duration-200 ease-in-out
-                        ${
-                          router.pathname === item.href || (item.href !== '/dashboard' && router.pathname.startsWith(item.href))
-                            ? 'bg-slate-900 text-white font-semibold shadow-inner'
-                            : 'hover:bg-slate-700 hover:text-white'
+                        ${router.pathname === item.href || (item.href !== '/dashboard' && router.pathname.startsWith(item.href))
+                          ? 'bg-slate-900 text-white font-semibold shadow-inner'
+                          : 'hover:bg-slate-700 hover:text-white'
+                        }`}
+                    >
+                      <span className="mr-3 text-lg">{item.icon}</span>
+                      {item.label}
+                    </a>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="space-y-2 pt-6 border-t border-slate-700">
+              {toolItems.map((item) => (
+                <li key={item.label}>
+                  <Link href={item.href} legacyBehavior>
+                    <a
+                      className={`flex items-center py-2.5 px-4 rounded-md transition duration-200 ease-in-out
+                        ${router.pathname === item.href || (item.href !== '/dashboard' && router.pathname.startsWith(item.href))
+                          ? 'bg-slate-900 text-white font-semibold shadow-inner'
+                          : 'hover:bg-slate-700 hover:text-white'
                         }`}
                     >
                       <span className="mr-3 text-lg">{item.icon}</span>
@@ -63,7 +84,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
               ))}
             </ul>
           </nav>
-          
+
           {/* User Info and Sign Out */}
           <div className="mt-auto pt-6 border-t border-slate-700 space-y-3">
             {session?.user && (
@@ -71,8 +92,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
                 <div className="flex items-center justify-center mb-2">
                   {session.user.image ? (
                     <div className="w-8 h-8 rounded-full mr-2 overflow-hidden bg-slate-600 flex-shrink-0">
-                      <Image 
-                        src={session.user.image} 
+                      <Image
+                        src={session.user.image}
                         alt="User avatar"
                         width={32}
                         height={32}
