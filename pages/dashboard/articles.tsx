@@ -4,6 +4,8 @@ import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import ArticleList from '../../components/dashboard/ArticleList';
 import AuthWrapper from '../../components/auth/AuthWrapper';
 import { IArticle } from '../../models/Article';
+import { SortOption } from '../../components/ui/SortControls';
+import { sortArticles } from '../../lib/utils/sortUtils';
 
 interface FetchArticlesApiResponse {
   articles?: IArticle[];
@@ -15,6 +17,23 @@ const MainDashboardPage: React.FC = () => {
   const [articles, setArticles] = useState<IArticle[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Add sorting state
+  const [currentSort, setCurrentSort] = useState<SortOption>({
+    field: 'publishedDate',
+    direction: 'desc',
+    label: 'Newest First'
+  });
+
+  // Sort articles whenever articles or sort changes
+  const sortedArticles = React.useMemo(() => {
+    return sortArticles(articles, currentSort.field, currentSort.direction);
+  }, [articles, currentSort.field, currentSort.direction]);
+
+  // Handle sort changes
+  const handleSortChange = useCallback((newSort: SortOption) => {
+    setCurrentSort(newSort);
+  }, []);
 
   // Memoize fetchArticles so it can be a stable dependency
   const fetchArticles = useCallback(async () => {
@@ -101,8 +120,10 @@ const MainDashboardPage: React.FC = () => {
 
         {!loading && !error && articles.length > 0 && (
           <ArticleList 
-            articles={articles} 
+            articles={sortedArticles}
             onArticleVisibilityChange={handleArticleVisibilityChange}
+            currentSort={currentSort}
+            onSortChange={handleSortChange}
           />
         )}
       </DashboardLayout>
