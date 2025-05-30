@@ -46,7 +46,7 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
     }
 
     try {
-      const response = await fetch(`/api/${sourceToEdit._id.toString()}`, { // Using your /api/[sourceId] PUT endpoint
+      const response = await fetch(`/api/sources/${sourceToEdit._id.toString()}`, { // Using your /api/sources/[sourceId] PUT endpoint
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -54,6 +54,14 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
         // Send all editable fields. The backend PUT handler only updates fields that are present.
         body: JSON.stringify({ name, url, type }),
       });
+
+      // Check if response is actually JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
+      }
 
       const responseData = await response.json();
 
