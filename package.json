@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/blob": "^1.1.1",
     "axios": "^1.9.0",
     "cheerio": "^1.0.0",
     "cherio": "^1.0.0-rc.2",
+    "formidable": "^3.5.4",
     "mongoose": "^8.15.1",
     "next": "15.3.2",
     "next-auth": "^4.24.11",
@@ -23,6 +25,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/cheerio": "^0.22.35",
+    "@types/formidable": "^3.4.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
