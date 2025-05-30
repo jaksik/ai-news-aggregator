@@ -23,6 +23,7 @@ export interface IProcessingSummarySubdoc { // <--- ADD export HERE
   status: 'success' | 'partial_success' | 'failed';
   message: string; 
   itemsFound: number;
+  itemsConsidered: number;  // Match the ProcessingSummary interface
   itemsProcessed: number;
   newItemsAdded: number;
   itemsSkipped: number;
@@ -37,6 +38,7 @@ const ProcessingSummarySchema = new Schema<IProcessingSummarySubdoc>({
   status: { type: String, enum: ['success', 'partial_success', 'failed'], required: true },
   message: { type: String, default: '' }, 
   itemsFound: { type: Number, default: 0, required: true },
+  itemsConsidered: { type: Number, default: 0, required: true },  // Add the new field
   itemsProcessed: { type: Number, default: 0, required: true },
   newItemsAdded: { type: Number, default: 0, required: true },
   itemsSkipped: { type: Number, default: 0, required: true },

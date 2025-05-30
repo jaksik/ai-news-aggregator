@@ -1,6 +1,5 @@
 // File: /lib/services/fetcher.ts
 
-import axios from 'axios';
 import Parser from 'rss-parser';
 import * as cheerio from 'cheerio';
 import mongoose from 'mongoose'; // Import mongoose for Types.ObjectId
@@ -38,6 +37,7 @@ export interface ProcessingSummary {
     itemsSkipped: number;
     errors: ItemError[];
     fetchError?: string;
+    logId?: string;  // Optional log ID for individual source fetches
 }
 
 export interface OverallFetchRunResult {
@@ -55,6 +55,23 @@ export interface OverallFetchRunResult {
 
 // --- Helper Functions ---
 const rssParser = new Parser();
+
+// --- Enhanced fetch function with better User-Agent ---
+const fetchWithUserAgent = async (url: string): Promise<Response> => {
+  return fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'DNT': '1',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1',
+    },
+    // Add timeout to prevent hanging
+    signal: AbortSignal.timeout(30000), // 30 second timeout
+  });
+};
 
 // --- Core Function for Processing a Single Source ---
 export async function fetchParseAndStoreSource(
@@ -82,14 +99,13 @@ export async function fetchParseAndStoreSource(
 
     try {
         await dbConnect();
-        const response = await axios.get(source.url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': source.type === 'rss' ? 'application/rss+xml, application/xml, text/xml' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            },
-            timeout: 15000,
-        });
-        const rawContent = response.data;
+        const response = await fetchWithUserAgent(source.url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const rawContent = await response.text();
 
         if (source.type === 'rss') {
             const parsedFeed = await rssParser.parseString(rawContent);
@@ -181,9 +197,6 @@ export async function fetchParseAndStoreSource(
         let message = 'Failed to fetch or process source.';
         if (error instanceof Error) {
             message = `Failed to fetch or process source: ${error.message}`;
-            if (axios.isAxiosError(error) && error.response) {
-                 message += ` Status: ${error.response.status}.`;
-            }
         }
         summary.fetchError = (error instanceof Error) ? error.message : String(error);
         summary.message = message;

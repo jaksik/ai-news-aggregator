@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import dbConnect from '../../../../lib/mongodb';
 import Source from '../../../../models/Source';
+import FetchRunLog from '../../../../models/FetchRunLog';
 import { fetchParseAndStoreSource, ProcessingSummary, SourceToFetch } from '../../../../lib/services/fetcher';
 
 type ResponseData = ProcessingSummary | { error: string; message?: string };
@@ -19,6 +20,10 @@ export default async function handler(
   const id = sourceId as string;
 
   if (req.method === 'POST') {
+    const startTime = new Date();
+    let logId: string | undefined = undefined;
+    let currentRunLog: typeof FetchRunLog.prototype | null = null;
+
     try {
       await dbConnect();
       const sourceDoc = await Source.findById(id);
@@ -28,6 +33,26 @@ export default async function handler(
       }
 
       console.log(`API: Manually triggering fetch for source: ${sourceDoc.name}`);
+
+      // Create a FetchRunLog entry for this individual fetch
+      try {
+        currentRunLog = new FetchRunLog({
+          startTime,
+          status: 'in-progress',
+          totalSourcesAttempted: 1,
+          totalSourcesSuccessfullyProcessed: 0,
+          totalSourcesFailedWithError: 0,
+          totalNewArticlesAddedAcrossAllSources: 0,
+          orchestrationErrors: [],
+          sourceSummaries: [],
+        });
+        logId = (currentRunLog._id as mongoose.Types.ObjectId).toString();
+        await currentRunLog.save();
+        console.log(`API: Created FetchRunLog for individual fetch with ID: ${logId}`);
+      } catch (logError: unknown) {
+        console.error('API: Failed to create FetchRunLog for individual fetch:', logError);
+        // Continue without logging - don't fail the fetch operation
+      }
 
       const sourceToFetchData: SourceToFetch = {
         name: sourceDoc.name,
@@ -49,8 +74,40 @@ export default async function handler(
       
       await sourceDoc.save();
 
+      // Update the FetchRunLog with the results
+      if (currentRunLog) {
+        const endTime = new Date();
+        const isSuccess = processingResult.status === 'success' || processingResult.status === 'partial_success';
+        
+        currentRunLog.endTime = endTime;
+        currentRunLog.status = processingResult.status === 'failed' ? 'failed' : 
+                               processingResult.errors.length > 0 ? 'completed_with_errors' : 'completed';
+        currentRunLog.totalSourcesSuccessfullyProcessed = isSuccess ? 1 : 0;
+        currentRunLog.totalSourcesFailedWithError = isSuccess ? 0 : 1;
+        currentRunLog.totalNewArticlesAddedAcrossAllSources = processingResult.newItemsAdded;
+        currentRunLog.sourceSummaries = [processingResult];
+        
+        if (processingResult.fetchError) {
+          currentRunLog.orchestrationErrors = [`Individual fetch error: ${processingResult.fetchError}`];
+        }
+        
+        try {
+          await currentRunLog.save();
+          console.log(`API: Updated FetchRunLog ${logId} with results`);
+        } catch (logSaveError: unknown) {
+          console.error('API: Failed to update FetchRunLog with results:', logSaveError);
+        }
+      }
+
       console.log(`API: Finished manual fetch for ${sourceDoc.name}. Status: ${processingResult.status}, New Articles: ${processingResult.newItemsAdded}`);
-      return res.status(200).json(processingResult);
+      
+      // Add logId to the response so the frontend can reference it
+      const responseWithLogId = {
+        ...processingResult,
+        logId: logId || undefined
+      };
+      
+      return res.status(200).json(responseWithLogId);
 
     } catch (error: unknown) {
       console.error(`API /api/sources/${id}/fetch POST Error:`, error);

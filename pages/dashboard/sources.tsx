@@ -93,7 +93,7 @@ const SourcesPage: React.FC = () => {
     if (!window.confirm(`Delete "${sourceName}"?`)) return;
     setIsSubmittingAction(sourceId); setActionError(null);
     try { /* ... same delete logic ... */
-      const res = await fetch(`/api/${sourceId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/sources/${sourceId}`, { method: 'DELETE' });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       fetchSources();
     } catch (error: unknown) { 
@@ -107,7 +107,7 @@ const SourcesPage: React.FC = () => {
     setOpenDropdownSourceId(null); // Close dropdown first
     setIsSubmittingAction(sourceId); setActionError(null);
     try { /* ... same toggle logic ... */
-      const res = await fetch(`/api/${sourceId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isEnabled: !currentIsEnabled }) });
+      const res = await fetch(`/api/sources/${sourceId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isEnabled: !currentIsEnabled }) });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       fetchSources();
     } catch (error: unknown) { 
@@ -123,7 +123,10 @@ const SourcesPage: React.FC = () => {
     try { /* ... same fetch now logic ... */
       const res = await fetch(`/api/sources/${sourceId}/fetch`, { method: 'POST' });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
-      alert(`Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}`);
+      const logMessage = d.logId ? 
+        `Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}. Log ID: ${d.logId}` :
+        `Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}`;
+      alert(logMessage);
       fetchSources();
     } catch (error: unknown) { 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
