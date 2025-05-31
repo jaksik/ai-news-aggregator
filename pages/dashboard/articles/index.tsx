@@ -1,68 +1,102 @@
 // File: pages/dashboard/articles/index.tsx
-import React, { useEffect, useState, useCallback } from 'react'; // Added useCallback
+import React, { useEffect, useState, useCallback } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import ArticleList from '../../../components/articles/ArticleList';
+import ArticleFilters, { FilterOptions } from '../../../components/articles/ArticleFilters';
 import AuthWrapper from '../../../components/auth/AuthWrapper';
 import { IArticle } from '../../../models/Article';
-import { SortOption } from '../../../components/articles/SortControls';
-import { sortArticles } from '../../../lib/utils/sortUtils';
 
 interface FetchArticlesApiResponse {
   articles?: IArticle[];
+  total?: number;
   error?: string;
   message?: string;
 }
 
 const MainDashboardPage: React.FC = () => {
   const [articles, setArticles] = useState<IArticle[]>([]);
+  const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Add sorting state
-  const [currentSort, setCurrentSort] = useState<SortOption>({
-    field: 'publishedDate',
-    direction: 'desc',
-    label: 'Newest First'
+  const [currentFilters, setCurrentFilters] = useState<FilterOptions>({
+    source: '',
+    startDate: '',
+    endDate: '',
+    limit: 100,
+    sortBy: 'publishedDate',
+    sortOrder: 'desc',
+    includeHidden: false,
   });
 
-  // Sort articles whenever articles or sort changes
-  const sortedArticles = React.useMemo(() => {
-    return sortArticles(articles, currentSort.field, currentSort.direction);
-  }, [articles, currentSort.field, currentSort.direction]);
-
-  // Handle sort changes
-  const handleSortChange = useCallback((newSort: SortOption) => {
-    setCurrentSort(newSort);
+  // Build query string from filters
+  const buildQueryString = useCallback((filters: FilterOptions): string => {
+    const params = new URLSearchParams();
+    
+    if (filters.source) params.append('source', filters.source);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    params.append('sortBy', filters.sortBy);
+    params.append('sortOrder', filters.sortOrder);
+    params.append('includeHidden', filters.includeHidden.toString());
+    
+    return params.toString();
   }, []);
 
-  // Memoize fetchArticles so it can be a stable dependency
-  const fetchArticles = useCallback(async () => {
+  // Fetch articles with current filters
+  const fetchArticles = useCallback(async (filters: FilterOptions) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/articles'); // This API needs to be updated later to filter hidden articles
+      const queryString = buildQueryString(filters);
+      const response = await fetch(`/api/articles?${queryString}`);
+      
       if (!response.ok) {
         const errorData: FetchArticlesApiResponse = await response.json();
         throw new Error(errorData.error || errorData.message || `Failed to fetch articles: ${response.status}`);
       }
+      
       const data: FetchArticlesApiResponse = await response.json();
       setArticles(data.articles || []);
+      setTotal(data.total || 0);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       console.error("Failed to fetch articles for dashboard:", err);
       setArticles([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency array, fetchArticles itself is stable
+  }, [buildQueryString]);
 
-  // Add a new callback to handle article visibility changes locally
+  // Handle filter changes
+  const handleApplyFilters = useCallback((filters: FilterOptions) => {
+    setCurrentFilters(filters);
+    fetchArticles(filters);
+  }, [fetchArticles]);
+
+  // Handle filter reset
+  const handleResetFilters = useCallback(() => {
+    const defaultFilters: FilterOptions = {
+      source: '',
+      startDate: '',
+      endDate: '',
+      limit: 100,
+      sortBy: 'publishedDate',
+      sortOrder: 'desc',
+      includeHidden: false,
+    };
+    setCurrentFilters(defaultFilters);
+    fetchArticles(defaultFilters);
+  }, [fetchArticles]);
+
+  // Handle article visibility changes
   const handleArticleVisibilityChange = useCallback(async (articleId: string, isHidden: boolean) => {
     try {
       // Update the article visibility on the server
       const response = await fetch(`/api/articles/${articleId}`, {
-        method: 'PUT', // Changed from 'PATCH' to 'PUT'
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -82,15 +116,33 @@ const MainDashboardPage: React.FC = () => {
             : article
         )
       );
+
+      // If the current filter excludes hidden articles and we just hid an article,
+      // remove it from the current view
+      if (!currentFilters.includeHidden && isHidden) {
+        setArticles(prevArticles => 
+          prevArticles.filter(article => article._id !== articleId)
+        );
+      }
     } catch (err) {
       console.error('Failed to update article visibility:', err);
       // Optionally show an error message to the user
     }
-  }, []);
+  }, [currentFilters.includeHidden]);
 
+  // Load articles on initial page load
   useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+    const initialFilters: FilterOptions = {
+      source: '',
+      startDate: '',
+      endDate: '',
+      limit: 100,
+      sortBy: 'publishedDate',
+      sortOrder: 'desc',
+      includeHidden: false,
+    };
+    fetchArticles(initialFilters);
+  }, [fetchArticles]); // Only depend on fetchArticles which is stable
 
   return (
     <AuthWrapper>
@@ -100,32 +152,40 @@ const MainDashboardPage: React.FC = () => {
           <p className="text-md md:text-lg text-gray-600">Your latest articles from various sources.</p>
         </header>
 
-        {loading && (
-          <div className="text-center py-8">
-            <p>Loading articles...</p>
-          </div>
-        )}
-        
+        {/* Filters */}
+        <ArticleFilters
+          onApplyFilters={handleApplyFilters}
+          onResetFilters={handleResetFilters}
+          loading={loading}
+          initialFilters={currentFilters}
+        />
+
+        {/* Error state */}
         {error && !loading && (
-          <div className="text-center py-8 text-red-600">
-            <p>Error: {error}</p>
-          </div>
-        )}
-        
-        {!loading && !error && articles.length === 0 && (
-          <div className="text-center py-8">
-            <p>No articles found.</p>
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error loading articles</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {!loading && !error && articles.length > 0 && (
-          <ArticleList 
-            articles={sortedArticles}
-            onArticleVisibilityChange={handleArticleVisibilityChange}
-            currentSort={currentSort}
-            onSortChange={handleSortChange}
-          />
-        )}
+        {/* Article List */}
+        <ArticleList 
+          articles={articles}
+          total={total}
+          loading={loading}
+          onArticleVisibilityChange={handleArticleVisibilityChange}
+        />
       </DashboardLayout>
     </AuthWrapper>
   );
