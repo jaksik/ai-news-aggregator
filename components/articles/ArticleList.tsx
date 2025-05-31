@@ -6,6 +6,7 @@ import ArticleCard from './ArticleCard';
 interface ArticleListProps {
   articles: IArticle[];
   onArticleVisibilityChange: (articleId: string, isHidden: boolean) => void;
+  onArticleDelete: (articleId: string) => void;
   total?: number;
   loading?: boolean;
 }
@@ -13,6 +14,7 @@ interface ArticleListProps {
 const ArticleList: React.FC<ArticleListProps> = ({ 
   articles, 
   onArticleVisibilityChange,
+  onArticleDelete,
   total,
   loading = false
 }) => {
@@ -65,6 +67,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
             key={article._id?.toString() || article.link} 
             article={article} 
             onArticleVisibilityChange={onArticleVisibilityChange}
+            onArticleDelete={onArticleDelete}
           />
         ))}
       </div>
