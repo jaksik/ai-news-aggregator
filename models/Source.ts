@@ -6,6 +6,17 @@ export interface ISource extends Document {
   url: string;                  // The URL of the RSS feed or the HTML page to scrape
   type: 'rss' | 'html';         // Type of the source
   isEnabled: boolean;           // Flag to easily enable/disable fetching from this source
+  scrapingConfig?: {            // Configuration for HTML scraping (only used when type is 'html')
+    websiteId: string;          // ID of the website configuration to use
+    maxArticles?: number;       // Max articles to scrape per fetch
+    customSelectors?: {         // Optional custom selectors that override defaults
+      articleSelector?: string;
+      titleSelector?: string;
+      urlSelector?: string;
+      dateSelector?: string;
+      descriptionSelector?: string;
+    };
+  };
   lastFetchedAt?: Date;         // Timestamp of the last time a fetch was attempted for this source
   lastStatus?: string;          // Brief status of the last fetch (e.g., "Success", "Failed", "No new articles")
   lastFetchMessage?: string;    // A more detailed message from the last fetch (e.g., "Added 5 new articles", "Fetch timeout")
@@ -37,6 +48,31 @@ const SourceSchema: Schema<ISource> = new Schema(
       type: Boolean,
       default: true, // New sources will be enabled by default
       index: true,   // Index for quickly finding all enabled sources
+    },
+    scrapingConfig: {
+      type: {
+        websiteId: {
+          type: String,
+          required: true,
+        },
+        maxArticles: {
+          type: Number,
+          min: 1,
+          max: 50,
+          default: 20,
+        },
+        customSelectors: {
+          type: {
+            articleSelector: String,
+            titleSelector: String,
+            urlSelector: String,
+            dateSelector: String,
+            descriptionSelector: String,
+          },
+          required: false,
+        },
+      },
+      required: false, // Only required for HTML sources
     },
     lastFetchedAt: {
       type: Date,

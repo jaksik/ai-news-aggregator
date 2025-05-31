@@ -1,7 +1,6 @@
 // File: /lib/services/fetcher.ts
 
 import Parser from 'rss-parser';
-import * as cheerio from 'cheerio';
 import mongoose from 'mongoose'; // Import mongoose for Types.ObjectId
 
 // MongoDB and Models
@@ -10,12 +9,27 @@ import Article, { IArticle } from '../../models/Article';
 import Source from '../../models/Source'; // ISource import can be removed if not directly used
 import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
 
+// HTML Scraping
+import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
+import { getWebsiteConfig } from '../scrapers/websiteConfigs';
+
 // --- Interface Definitions ---
 
 export interface SourceToFetch {
     url: string;
     type: 'rss' | 'html';
     name: string;
+    scrapingConfig?: {
+        websiteId: string;
+        maxArticles?: number;
+        customSelectors?: {
+            articleSelector?: string;
+            titleSelector?: string;
+            urlSelector?: string;
+            dateSelector?: string;
+            descriptionSelector?: string;
+        };
+    };
 }
 
 export interface ItemError {
@@ -185,13 +199,86 @@ export async function fetchParseAndStoreSource(
             }
 
         } else if (source.type === 'html') {
-            const $ = cheerio.load(rawContent);
-            const pageTitle = $('title').text();
-            summary.itemsFound = 1; 
-            summary.itemsConsidered = 1; // Limit not really applicable to current basic HTML parsing
-            summary.itemsProcessed = 1;
-            summary.message = `HTML page "${pageTitle}" fetched. Full article extraction & saving not yet implemented. Article limit not applied.`;
-            summary.status = 'success';
+            // HTML scraping implementation
+            if (!source.scrapingConfig?.websiteId) {
+                throw new Error('HTML source requires scrapingConfig with websiteId');
+            }
+
+            const websiteConfig = getWebsiteConfig(source.scrapingConfig.websiteId);
+            if (!websiteConfig) {
+                throw new Error(`No configuration found for websiteId: ${source.scrapingConfig.websiteId}`);
+            }
+
+            // Merge custom selectors with website config
+            const mergedConfig: ScrapingConfig = {
+                ...websiteConfig,
+                maxArticles: source.scrapingConfig.maxArticles || websiteConfig.maxArticles || 20,
+                ...(source.scrapingConfig.customSelectors && {
+                    articleSelector: source.scrapingConfig.customSelectors.articleSelector || websiteConfig.articleSelector,
+                    titleSelector: source.scrapingConfig.customSelectors.titleSelector || websiteConfig.titleSelector,
+                    urlSelector: source.scrapingConfig.customSelectors.urlSelector || websiteConfig.urlSelector,
+                    dateSelector: source.scrapingConfig.customSelectors.dateSelector || websiteConfig.dateSelector,
+                    descriptionSelector: source.scrapingConfig.customSelectors.descriptionSelector || websiteConfig.descriptionSelector,
+                })
+            };
+
+            const scraper = new HTMLScraper(mergedConfig);
+            const scrapedArticles = await scraper.scrapeWebsite(source.url, mergedConfig, source.name);
+            
+            summary.itemsFound = scrapedArticles.length;
+            summary.itemsConsidered = scrapedArticles.length;
+
+            if (scrapedArticles.length > 0) {
+                for (const scrapedArticle of scrapedArticles) {
+                    summary.itemsProcessed++;
+                    
+                    try {
+                        // Check for existing article by URL
+                        const existingArticle = await Article.findOne({ link: scrapedArticle.url });
+
+                        if (existingArticle) {
+                            summary.itemsSkipped++;
+                        } else {
+                            const newArticleDoc = new Article({
+                                title: scrapedArticle.title,
+                                link: scrapedArticle.url,
+                                sourceName: source.name,
+                                publishedDate: scrapedArticle.publishedDate ? new Date(scrapedArticle.publishedDate) : new Date(),
+                                descriptionSnippet: scrapedArticle.description || '',
+                                fetchedAt: new Date(),
+                                isRead: false,
+                                isStarred: false,
+                                categories: [],
+                            });
+                            await newArticleDoc.save();
+                            summary.newItemsAdded++;
+                        }
+                    } catch (dbError: unknown) {
+                        let message = 'Unknown database error';
+                        if (dbError instanceof Error) {
+                            message = dbError.message;
+                        }
+                        summary.errors.push({ 
+                            itemTitle: scrapedArticle.title, 
+                            itemLink: scrapedArticle.url, 
+                            message 
+                        });
+                    }
+                }
+            }
+
+            // Set status and message for HTML
+            const processedStatsMessage = `Processed ${summary.itemsProcessed} articles. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
+            if (summary.errors.length > 0) {
+                summary.status = 'partial_success';
+                summary.message = `Completed with ${summary.errors.length} errors. ${processedStatsMessage}`;
+            } else if (summary.itemsConsidered === 0) {
+                summary.status = 'success';
+                summary.message = "No articles found on website.";
+            } else {
+                summary.status = 'success';
+                summary.message = `Successfully ${processedStatsMessage}`;
+            }
         }
     } catch (error: unknown) {
         let message = 'Failed to fetch or process source.';
@@ -264,6 +351,7 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
                     url: sourceDoc.url,
                     type: sourceDoc.type,
                     name: sourceDoc.name,
+                    scrapingConfig: sourceDoc.scrapingConfig,
                 };
                 const summary = await fetchParseAndStoreSource(sourceInput);
                 detailedSummaries.push(summary);

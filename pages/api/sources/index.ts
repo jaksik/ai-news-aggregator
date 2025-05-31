@@ -37,7 +37,7 @@ export default async function handler(
 
   } else if (req.method === 'POST') {
     try {
-      const { name, url, type, isEnabled } = req.body;
+      const { name, url, type, isEnabled, scrapingConfig } = req.body;
 
       // Basic server-side validation
       if (!name || !url || !type) {
@@ -47,13 +47,43 @@ export default async function handler(
         return res.status(400).json({ error: 'Invalid type. Must be "rss" or "html".' });
       }
 
+      // Validate scraping config for HTML sources
+      if (type === 'html') {
+        if (!scrapingConfig || !scrapingConfig.websiteId) {
+          return res.status(400).json({ error: 'HTML sources require scrapingConfig with websiteId.' });
+        }
+      }
+
       // Create a new source document
-      const newSource = new Source({
+      const sourceData: {
+        name: string;
+        url: string;
+        type: 'rss' | 'html';
+        isEnabled: boolean;
+        scrapingConfig?: {
+          websiteId: string;
+          maxArticles?: number;
+          customSelectors?: {
+            articleSelector?: string;
+            titleSelector?: string;
+            urlSelector?: string;
+            dateSelector?: string;
+            descriptionSelector?: string;
+          };
+        };
+      } = {
         name,
         url,
         type,
         isEnabled: isEnabled !== undefined ? Boolean(isEnabled) : true,
-      });
+      };
+
+      // Add scraping config for HTML sources
+      if (type === 'html' && scrapingConfig) {
+        sourceData.scrapingConfig = scrapingConfig;
+      }
+
+      const newSource = new Source(sourceData);
 
       const savedSource = await newSource.save();
 
