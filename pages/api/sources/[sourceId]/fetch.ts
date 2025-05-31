@@ -58,6 +58,7 @@ export default async function handler(
         name: sourceDoc.name,
         url: sourceDoc.url,
         type: sourceDoc.type,
+        scrapingConfig: sourceDoc.scrapingConfig,
       };
 
       // Call the existing function that processes a single source and saves articles
