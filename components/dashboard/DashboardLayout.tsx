@@ -14,6 +14,7 @@ interface DashboardLayoutProps {
 // Add the new "Controls" page to your navigation items
 const navItems = [
   { href: '/dashboard/articles', label: 'Article Feed', icon: '📰' },
+  { href: '/dashboard/newsletter', label: 'Newsletter', icon: '📬' },
   { href: '/dashboard/sources', label: 'Manage Sources', icon: '🌐' },
   { href: '/dashboard/logs', label: 'Fetch Logs', icon: '📊' },
   { href: '/dashboard/controls', label: 'Fetch Controls', icon: '🕹️' },
