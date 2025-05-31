@@ -1,4 +1,4 @@
-// File: pages/api/fetch-logs/index.ts
+// File: pages/api/logs/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '../../../lib/mongodb';
 import FetchRunLog, { IFetchRunLog } from '../../../models/FetchRunLog';
@@ -20,7 +20,7 @@ export default async function handler(
   try {
     await dbConnect();
   } catch (error: unknown) {
-    console.error('API /api/fetch-logs - DB Connection Error:', error);
+    console.error('API /api/logs - DB Connection Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
     return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
   }
@@ -28,7 +28,7 @@ export default async function handler(
   if (req.method === 'GET') {
     try {
       // Basic Pagination parameters from query string
-      // Example: /api/fetch-logs?page=1&limit=10
+      // Example: /api/logs?page=1&limit=10
       const page = parseInt(req.query.page as string) || 1; // Default to page 1
       const limit = parseInt(req.query.limit as string) || 20; // Default to 20 logs per page
       const skip = (page - 1) * limit;
@@ -54,7 +54,7 @@ export default async function handler(
       });
 
     } catch (error: unknown) {
-      console.error('API /api/fetch-logs GET Error:', error);
+      console.error('API /api/logs GET Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       res.status(500).json({ error: 'Failed to fetch logs from database', message: errorMessage });
     }

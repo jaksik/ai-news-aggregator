@@ -34,7 +34,7 @@ const DashboardIndex: React.FC = () => {
         const articlesData = await articlesResponse.json();
         
         // Fetch recent fetch logs
-        const logsResponse = await fetch('/api/fetch-logs?limit=5');
+        const logsResponse = await fetch('/api/logs?limit=5');
         const logsData = await logsResponse.json();
         
         setStats({
