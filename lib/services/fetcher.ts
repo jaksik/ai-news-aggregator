@@ -12,6 +12,7 @@ import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
 // HTML Scraping
 import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
 import { getWebsiteConfig } from '../scrapers/websiteConfigs';
+import { getEffectiveArticleLimit, logArticleLimitConfig } from '../config/articleLimits';
 
 // --- Interface Definitions ---
 
@@ -91,11 +92,8 @@ const fetchWithUserAgent = async (url: string): Promise<Response> => {
 export async function fetchParseAndStoreSource(
     source: SourceToFetch
 ): Promise<ProcessingSummary> {
-    // Read the limit from environment variable, with a default (e.g., null if not set or invalid)
-    const maxArticlesLimitString = '10';
-    const maxArticlesLimit = maxArticlesLimitString ? parseInt(maxArticlesLimitString, 10) : null;
-    // Ensure maxArticlesLimit is a positive number, otherwise null (no limit)
-    const effectiveMaxArticles = (maxArticlesLimit && maxArticlesLimit > 0) ? maxArticlesLimit : null;
+    // Log current article limit configuration for debugging
+    logArticleLimitConfig();
 
     const summary: ProcessingSummary = {
         sourceUrl: source.url,
@@ -127,6 +125,9 @@ export async function fetchParseAndStoreSource(
             
             let itemsToProcess = parsedFeed.items || [];
             let limitMessagePart = '';
+
+            // Get effective article limit using centralized logic
+            const effectiveMaxArticles = getEffectiveArticleLimit();
 
             if (effectiveMaxArticles && itemsToProcess.length > effectiveMaxArticles) {
                 console.log(`Fetcher: Source ${source.name} has ${itemsToProcess.length} items, limiting to first ${effectiveMaxArticles}.`);
@@ -212,7 +213,11 @@ export async function fetchParseAndStoreSource(
             // Merge custom selectors with website config
             const mergedConfig: ScrapingConfig = {
                 ...websiteConfig,
-                maxArticles: source.scrapingConfig.maxArticles || websiteConfig.maxArticles || 20,
+                maxArticles: getEffectiveArticleLimit(
+                    source.scrapingConfig.maxArticles,
+                    websiteConfig.maxArticles,
+                    20
+                ),
                 ...(source.scrapingConfig.customSelectors && {
                     articleSelector: source.scrapingConfig.customSelectors.articleSelector || websiteConfig.articleSelector,
                     titleSelector: source.scrapingConfig.customSelectors.titleSelector || websiteConfig.titleSelector,
