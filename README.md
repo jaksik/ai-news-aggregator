@@ -50,13 +50,19 @@ pages/api/
 │       └── index.ts               # POST /api/articles/external (create external article)
 ├── sources/
 │   ├── index.ts                   # GET/POST /api/sources
+│   ├── fetch.ts                   # POST /api/sources/fetch
 │   └── [sourceId]/
 │       ├── index.ts               # PUT/DELETE /api/sources/[sourceId]
 │       └── fetch.ts               # POST /api/sources/[sourceId]/fetch
-├── fetch-logs/
-│   ├── index.ts                   # GET /api/fetch-logs
+├── logs/
+│   ├── index.ts                   # GET /api/logs
 │   └── [runId]/
-│       └── index.ts               # GET /api/fetch-logs/[runId]
-├── fetch/
-│   ├── all-sources.ts             # POST /api/fetch/all-sources
-│   └── test.ts      
+│       └── index.ts               # GET /api/logs/[runId]
+├── tools/
+│   ├── index.ts                   # GET/POST /api/tools
+│   ├── [id].ts                    # GET/PUT/DELETE /api/tools/[id]
+│   └── upload-logo.ts             # POST /api/tools/upload-logo
+├── newsletter/
+│   ├── index.ts                   # GET/POST /api/newsletter
+│   ├── [id].ts                    # GET/PUT/DELETE /api/newsletter/[id]
+│   └── generate.ts                # POST /api/newsletter/generate      

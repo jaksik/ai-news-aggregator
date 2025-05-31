@@ -32,7 +32,7 @@ const LogDetailPage: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-          const response = await fetch(`/api/fetch-logs/${runId}`);
+          const response = await fetch(`/api/logs/${runId}`);
           if (!response.ok) {
             const errorData: FetchLogDetailApiResponse = await response.json();
             throw new Error(errorData.error || errorData.message || `Failed to fetch log details: ${response.status}`);
