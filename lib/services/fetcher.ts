@@ -1,18 +1,21 @@
 // File: /lib/services/fetcher.ts
 
-import Parser from 'rss-parser';
 import mongoose from 'mongoose'; // Import mongoose for Types.ObjectId
 
 // MongoDB and Models
 import dbConnect from '../mongodb';
-import Article, { IArticle } from '../../models/Article';
 import Source from '../../models/Source'; // ISource import can be removed if not directly used
 import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
 
-// HTML Scraping
-import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
-import { getWebsiteConfig } from '../scrapers/websiteConfigs';
-import { getMaxArticlesPerSource } from '../config/articleLimits';
+// HTML Scraping - Updated for Phase 4
+// (HTMLScraper and EnhancedHTMLScraper are now handled by HTMLProcessor)
+
+// Service Dependencies - Updated for Phase 4 completion
+// (ArticleProcessor and ScraperSelector are now handled by dedicated processors)
+
+// Dedicated Processors (Phase 4) - Main processing services
+import { RSSProcessor } from './rssProcessor';
+import { HTMLProcessor } from './htmlProcessor';
 
 // --- Interface Definitions ---
 
@@ -68,7 +71,6 @@ export interface OverallFetchRunResult {
 }
 
 // --- Helper Functions ---
-const rssParser = new Parser();
 
 // --- Enhanced fetch function with better User-Agent ---
 const fetchWithUserAgent = async (url: string): Promise<Response> => {
@@ -116,166 +118,18 @@ export async function fetchParseAndStoreSource(
         const rawContent = await response.text();
 
         if (source.type === 'rss') {
-            const parsedFeed = await rssParser.parseString(rawContent);
-            summary.itemsFound = parsedFeed.items?.length || 0; // Total items available in the feed
+            // RSS processing using dedicated RSSProcessor
+            const rssResult = await RSSProcessor.processRSSSource(source, rawContent);
             
-            let itemsToProcess = parsedFeed.items || [];
-            let limitMessagePart = '';
-
-            // Get the maximum articles limit from environment variable
-            const maxArticles = getMaxArticlesPerSource();
-
-            if (maxArticles && itemsToProcess.length > maxArticles) {
-                console.log(`Fetcher: Source ${source.name} has ${itemsToProcess.length} items, limiting to first ${maxArticles}.`);
-                itemsToProcess = itemsToProcess.slice(0, maxArticles);
-                limitMessagePart = ` (limited to first ${itemsToProcess.length} of ${summary.itemsFound} found).`;
-            }
-            summary.itemsConsidered = itemsToProcess.length; // Number of items we will iterate over
-
-            if (itemsToProcess.length > 0) {
-                for (const item of itemsToProcess) {
-                    summary.itemsProcessed++; // Increment for each item we attempt to process
-                    const normalizedLink = item.link?.trim();
-                    const itemTitle = item.title?.trim();
-
-                    if (!normalizedLink) {
-                        summary.errors.push({ itemTitle, message: 'Item missing link.' });
-                        continue;
-                    }
-                    try {
-                        let existingArticle: IArticle | null = null;
-                        if (item.guid) {
-                            existingArticle = await Article.findOne({ guid: item.guid });
-                        }
-                        if (!existingArticle && normalizedLink) {
-                            existingArticle = await Article.findOne({ link: normalizedLink });
-                        }
-
-                        if (existingArticle) {
-                            summary.itemsSkipped++;
-                        } else {
-                            const newArticleDoc = new Article({
-                                title: itemTitle || 'Untitled Article',
-                                link: normalizedLink,
-                                sourceName: source.name,
-                                publishedDate: item.isoDate ? new Date(item.isoDate) : (item.pubDate ? new Date(item.pubDate) : undefined),
-                                descriptionSnippet: item.contentSnippet || item.content?.substring(0, 300),
-                                guid: item.guid,
-                                fetchedAt: new Date(),
-                                isRead: false,
-                                isStarred: false,
-                                categories: item.categories,
-                            });
-                            await newArticleDoc.save();
-                            summary.newItemsAdded++;
-                        }
-                    } catch (dbError: unknown) {
-                        let message = 'Unknown database error';
-                        if (dbError instanceof Error) {
-                            message = dbError.message;
-                        }
-                        summary.errors.push({ itemTitle, itemLink: normalizedLink, message });
-                    }
-                }
-            }
-            // Set status and message for RSS
-            const processedStatsMessage = `Processed ${summary.itemsProcessed} items${limitMessagePart}. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
-            if (summary.errors.length > 0) {
-                summary.status = 'partial_success';
-                summary.message = `Completed with ${summary.errors.length} errors. ${processedStatsMessage}`;
-            } else if (summary.itemsConsidered === 0 && summary.itemsFound === 0) {
-                summary.status = 'success';
-                summary.message = "No items found in RSS feed.";
-            } else if (summary.itemsConsidered === 0 && summary.itemsFound > 0) {
-                 summary.status = 'success';
-                 summary.message = `Found ${summary.itemsFound} items, but 0 considered after limit (or limit was 0). No items processed.`;
-            }
-             else {
-                summary.status = 'success';
-                summary.message = `Successfully ${processedStatsMessage}`;
-            }
+            // Copy results from RSS processor to main summary
+            Object.assign(summary, rssResult);
 
         } else if (source.type === 'html') {
-            // HTML scraping implementation
-            if (!source.scrapingConfig?.websiteId) {
-                throw new Error('HTML source requires scrapingConfig with websiteId');
-            }
-
-            const websiteConfig = getWebsiteConfig(source.scrapingConfig.websiteId);
-            if (!websiteConfig) {
-                throw new Error(`No configuration found for websiteId: ${source.scrapingConfig.websiteId}`);
-            }
-
-            // Merge custom selectors with website config
-            const mergedConfig: ScrapingConfig = {
-                ...websiteConfig,
-                maxArticles: getMaxArticlesPerSource(),
-                ...(source.scrapingConfig.customSelectors && {
-                    articleSelector: source.scrapingConfig.customSelectors.articleSelector || websiteConfig.articleSelector,
-                    titleSelector: source.scrapingConfig.customSelectors.titleSelector || websiteConfig.titleSelector,
-                    urlSelector: source.scrapingConfig.customSelectors.urlSelector || websiteConfig.urlSelector,
-                    dateSelector: source.scrapingConfig.customSelectors.dateSelector || websiteConfig.dateSelector,
-                    descriptionSelector: source.scrapingConfig.customSelectors.descriptionSelector || websiteConfig.descriptionSelector,
-                })
-            };
-
-            const scraper = new HTMLScraper(mergedConfig);
-            const scrapedArticles = await scraper.scrapeWebsite(source.url, mergedConfig, source.name);
+            // HTML processing using dedicated HTMLProcessor
+            const htmlResult = await HTMLProcessor.processHTMLSource(source, rawContent);
             
-            summary.itemsFound = scrapedArticles.length;
-            summary.itemsConsidered = scrapedArticles.length;
-
-            if (scrapedArticles.length > 0) {
-                for (const scrapedArticle of scrapedArticles) {
-                    summary.itemsProcessed++;
-                    
-                    try {
-                        // Check for existing article by URL
-                        const existingArticle = await Article.findOne({ link: scrapedArticle.url });
-
-                        if (existingArticle) {
-                            summary.itemsSkipped++;
-                        } else {
-                            const newArticleDoc = new Article({
-                                title: scrapedArticle.title,
-                                link: scrapedArticle.url,
-                                sourceName: source.name,
-                                publishedDate: scrapedArticle.publishedDate ? new Date(scrapedArticle.publishedDate) : new Date(),
-                                descriptionSnippet: scrapedArticle.description || '',
-                                fetchedAt: new Date(),
-                                isRead: false,
-                                isStarred: false,
-                                categories: [],
-                            });
-                            await newArticleDoc.save();
-                            summary.newItemsAdded++;
-                        }
-                    } catch (dbError: unknown) {
-                        let message = 'Unknown database error';
-                        if (dbError instanceof Error) {
-                            message = dbError.message;
-                        }
-                        summary.errors.push({ 
-                            itemTitle: scrapedArticle.title, 
-                            itemLink: scrapedArticle.url, 
-                            message 
-                        });
-                    }
-                }
-            }
-
-            // Set status and message for HTML
-            const processedStatsMessage = `Processed ${summary.itemsProcessed} articles. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
-            if (summary.errors.length > 0) {
-                summary.status = 'partial_success';
-                summary.message = `Completed with ${summary.errors.length} errors. ${processedStatsMessage}`;
-            } else if (summary.itemsConsidered === 0) {
-                summary.status = 'success';
-                summary.message = "No articles found on website.";
-            } else {
-                summary.status = 'success';
-                summary.message = `Successfully ${processedStatsMessage}`;
-            }
+            // Copy results from HTML processor to main summary
+            Object.assign(summary, htmlResult);
         }
     } catch (error: unknown) {
         let message = 'Failed to fetch or process source.';
