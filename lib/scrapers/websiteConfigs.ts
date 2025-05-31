@@ -23,8 +23,7 @@ export const websiteConfigs: Record<string, ScrapingConfig> = {
     articleSelector: 'article, [data-post], .post, div:has(a[href*="/blog/"]:not([href="/blog"]))',
     titleSelector: 'h1, h2, h3, .title, .post-title',
     descriptionSelector: '.excerpt, .summary, p:first-of-type',
-    dateSelector: 'time, .date, .published',
-    maxArticles: 15
+    dateSelector: 'time, .date, .published'
   }
 };
 
