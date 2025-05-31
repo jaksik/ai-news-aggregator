@@ -40,7 +40,7 @@ export class HTMLScraper {
 
   async scrapeWebsite(url: string, config: ScrapingConfig, sourceName: string): Promise<ScrapedArticle[]> {
     try {
-      console.log(`Scraping ${sourceName} from ${url}`);
+      console.log(`Scraping ${sourceName} from ${url} with limit: ${config.maxArticles}`);
       
       const response = await axios.get(url, {
         headers: {
@@ -54,7 +54,7 @@ export class HTMLScraper {
       const seenUrls = new Set<string>(); // Track URLs to avoid duplicates
 
       $(config.articleSelector).each((index, element) => {
-        if (articles.length >= (config.maxArticles || 3)) return false;
+        if (config.maxArticles && articles.length >= config.maxArticles) return false;
 
         const $element = $(element);
         
