@@ -1,6 +1,6 @@
 // File: lib/utils/sortUtils.ts
 import { IArticle } from '../../models/Article';
-import { SortField, SortDirection } from '../../components/ui/SortControls';
+import { SortField, SortDirection } from '../../components/articles/SortControls';
 
 export const sortArticles = (
   articles: IArticle[], 

@@ -1,4 +1,4 @@
-// File: components/ui/ArticleCard.tsx
+// File: components/articles/ArticleCard.tsx
 import React, { useState } from 'react';
 import { IArticle } from '../../models/Article'; // Adjust path if needed
 

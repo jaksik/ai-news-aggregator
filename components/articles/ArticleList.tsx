@@ -1,8 +1,8 @@
-// File: components/dashboard/ArticleList.tsx
+// File: components/articles/ArticleList.tsx
 import React, { useState, useMemo } from 'react';
 import { IArticle } from '../../models/Article'; // Or your FrontendArticle type
-import ArticleCard from '../ui/ArticleCard'; 
-import SortControls, { SortOption } from '../ui/SortControls';
+import ArticleCard from './ArticleCard'; 
+import SortControls, { SortOption } from './SortControls';
 
 interface ArticleListProps {
   articles: IArticle[];

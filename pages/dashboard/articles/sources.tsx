@@ -3,8 +3,8 @@ import React, { useEffect, useState, useCallback, useRef } from 'react'; // Adde
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../../components/auth/AuthWrapper';
 import { ISource } from '../../../models/Source';
-import AddSourceModal from '../../../components/dashboard/AddSourceModal';
-import EditSourceModal from '../../../components/dashboard/EditSourceModal';
+import AddSourceModal from '../../../components/sources/AddSourceModal';
+import EditSourceModal from '../../../components/sources/EditSourceModal';
 
 const SourcesPage: React.FC = () => {
   const [sources, setSources] = useState<ISource[]>([]);
