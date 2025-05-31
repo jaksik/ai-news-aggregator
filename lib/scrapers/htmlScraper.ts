@@ -12,6 +12,7 @@ export interface ScrapingConfig {
   descriptionSelector?: string;
   dateFormat?: string;
   maxArticles?: number;
+  skipArticlesWithoutDates?: boolean; // Skip articles that don't have extractable dates (useful for filtering featured/promotional content)
   titleCleaning?: {
     removePrefixes?: string[];
     removeSuffixes?: string[];
@@ -78,7 +79,13 @@ export class HTMLScraper {
         // Extract date (optional)
         const publishedDate = config.dateSelector 
           ? this.extractDate($element, config.dateSelector)
-          : new Date().toISOString();
+          : undefined;
+
+        // Skip articles without dates if specifically configured to do so (useful for filtering featured/promotional content)
+        if (config.skipArticlesWithoutDates && config.dateSelector && !publishedDate) {
+          console.log(`[DEBUG] Skipping article without date: "${title.substring(0, 50)}..."`);
+          return;
+        }
 
         articles.push({
           title: title.trim(),
@@ -116,6 +123,14 @@ export class HTMLScraper {
         }
       }
       
+      // Remove suffixes
+      if (this.config.titleCleaning.removeSuffixes) {
+        for (const suffix of this.config.titleCleaning.removeSuffixes) {
+          const regex = new RegExp(`\\s*${suffix}\\s*$`, 'i');
+          title = title.replace(regex, '');
+        }
+      }
+      
       // Remove patterns
       if (this.config.titleCleaning.removePatterns) {
         for (const pattern of this.config.titleCleaning.removePatterns) {
@@ -123,10 +138,6 @@ export class HTMLScraper {
           title = title.replace(regex, '');
         }
       }
-    } else {
-      // Default cleaning for backward compatibility
-      title = title.replace(/^(Announcements|Product|Policy|Societal Impacts|Interpretability|Alignment|Education|Event)\s*·?\s*/i, '');
-      title = title.replace(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}$/i, '');
     }
     
     // Clean up whitespace
@@ -164,29 +175,41 @@ export class HTMLScraper {
     return $element.find(selector).first().text();
   }
 
-  private extractDate($element: cheerio.Cheerio, dateSelector: string): string {
+  private extractDate($element: cheerio.Cheerio, dateSelector: string): string | undefined {
     const dateText = $element.find(dateSelector).first().text() || 
                      $element.find(dateSelector).first().attr('datetime') ||
                      $element.find(dateSelector).first().attr('content');
     
+    console.log(`[DEBUG] Date extraction - Selector: ${dateSelector}, Found text: "${dateText}"`);
+    
     if (!dateText) {
-      // Try to extract date from the text content for Anthropic format
-      const text = $element.text();
-      const dateMatch = text.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}/);
-      if (dateMatch) {
-        try {
-          return new Date(dateMatch[0]).toISOString();
-        } catch {
-          return new Date().toISOString();
+      // Check if config specifies custom date extraction
+      if (this.config?.customExtraction?.dateFromText && this.config.customExtraction.dateRegex) {
+        const text = $element.text();
+        const dateMatch = text.match(new RegExp(this.config.customExtraction.dateRegex));
+        console.log(`[DEBUG] Fallback regex search in: "${text.substring(0, 200)}..." - Match: ${dateMatch?.[0] || 'none'}`);
+        if (dateMatch) {
+          try {
+            const extractedDate = new Date(dateMatch[0]).toISOString();
+            console.log(`[DEBUG] Fallback date extracted: ${extractedDate}`);
+            return extractedDate;
+          } catch {
+            console.log(`[DEBUG] Fallback date parsing failed for: ${dateMatch[0]}`);
+            return undefined; // Don't save inaccurate dates
+          }
         }
       }
-      return new Date().toISOString();
+      console.log(`[DEBUG] No date found, returning undefined`);
+      return undefined; // Don't save inaccurate dates
     }
     
     try {
-      return new Date(dateText).toISOString();
+      const parsedDate = new Date(dateText).toISOString();
+      console.log(`[DEBUG] Date parsed successfully: ${parsedDate}`);
+      return parsedDate;
     } catch {
-      return new Date().toISOString();
+      console.log(`[DEBUG] Date parsing failed for: "${dateText}"`);
+      return undefined; // Don't save inaccurate dates
     }
   }
 }
