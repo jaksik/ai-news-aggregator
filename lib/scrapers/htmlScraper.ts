@@ -54,7 +54,7 @@ export class HTMLScraper {
       const seenUrls = new Set<string>(); // Track URLs to avoid duplicates
 
       $(config.articleSelector).each((index, element) => {
-        if (articles.length >= (config.maxArticles || 20)) return false;
+        if (articles.length >= (config.maxArticles || 3)) return false;
 
         const $element = $(element);
         
