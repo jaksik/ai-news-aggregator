@@ -1,70 +1,29 @@
 /**
- * Centralized Article Limit Configuration
+ * Simplified Article Limit Configuration
  * 
- * This module provides a single, robust source of truth for article limiting
- * across the entire application. It ensures consistent behavior regardless
- * of source configuration hierarchies.
+ * This module provides a single source of truth for article limiting
+ * using only the MAX_ARTICLES_PER_SOURCE environment variable.
  */
 
 /**
- * Gets the effective maximum articles per source from environment variable
- * @returns {number | null} The maximum number of articles, or null for no limit
+ * Gets the maximum articles per source from environment variable
+ * @returns {number} The maximum number of articles (defaults to 20 if not set or invalid)
  */
-export function getMaxArticlesPerSource(): number | null {
+export function getMaxArticlesPerSource(): number {
   const envValue = process.env.MAX_ARTICLES_PER_SOURCE;
   
   if (!envValue || envValue.trim() === '') {
-    return null; // No limit if not set
+    console.log('MAX_ARTICLES_PER_SOURCE not set, using default limit of 20');
+    return 20; // Default limit
   }
   
   const parsed = parseInt(envValue.trim(), 10);
   
   if (isNaN(parsed) || parsed <= 0) {
-    console.warn(`Invalid MAX_ARTICLES_PER_SOURCE value: "${envValue}". Using no limit.`);
-    return null;
+    console.warn(`Invalid MAX_ARTICLES_PER_SOURCE value: "${envValue}". Using default limit of 20.`);
+    return 20; // Default limit
   }
   
+  console.log(`Using article limit from environment: ${parsed}`);
   return parsed;
-}
-
-/**
- * Applies the global article limit to any source-specific configuration
- * The environment variable takes absolute precedence over all other configurations
- * 
- * @param sourceSpecificLimit - Limit from source configuration (may be undefined)
- * @param websiteConfigLimit - Limit from website configuration (may be undefined)
- * @param fallbackLimit - Default fallback limit
- * @returns {number} The effective limit to use
- */
-export function getEffectiveArticleLimit(
-  sourceSpecificLimit?: number,
-  websiteConfigLimit?: number,
-  fallbackLimit: number = 20
-): number {
-  const globalLimit = getMaxArticlesPerSource();
-  
-  // Global environment variable takes absolute precedence
-  if (globalLimit !== null) {
-    console.log(`Using global article limit from environment: ${globalLimit}`);
-    return globalLimit;
-  }
-  
-  // Otherwise, use the hierarchy: source-specific > website config > fallback
-  const effectiveLimit = sourceSpecificLimit || websiteConfigLimit || fallbackLimit;
-  console.log(`Using configuration-based article limit: ${effectiveLimit}`);
-  return effectiveLimit;
-}
-
-/**
- * Validates and logs the current article limit configuration
- * Useful for debugging and monitoring
- */
-export function logArticleLimitConfig(): void {
-  const globalLimit = getMaxArticlesPerSource();
-  
-  if (globalLimit !== null) {
-    console.log(`Article Limit Config: Global limit active (MAX_ARTICLES_PER_SOURCE=${globalLimit})`);
-  } else {
-    console.log(`Article Limit Config: No global limit set, using source-specific configurations`);
-  }
 }
