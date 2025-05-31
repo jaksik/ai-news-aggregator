@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../components/auth/AuthWrapper';
+import FetchAllSourcesControl from '../../components/dashboard/controls/FetchAllSourcesControl';
 import { ISource } from '../../models/Source';
 
 interface DashboardStats {
@@ -172,6 +173,9 @@ const DashboardIndex: React.FC = () => {
               </Link>
             </div>
           </div>
+
+          {/* Fetch Control */}
+          <FetchAllSourcesControl />
 
           {/* System Status */}
           <div className="bg-white rounded-lg shadow-md p-6">
