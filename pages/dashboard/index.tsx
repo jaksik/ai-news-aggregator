@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../components/auth/AuthWrapper';
-import FetchAllSourcesControl from '../../components/dashboard/controls/FetchAllSourcesControl';
+import FetchAllSourcesControl from '../../components/sources/FetchAllSourcesControl';
 import { ISource } from '../../models/Source';
 
 interface DashboardStats {

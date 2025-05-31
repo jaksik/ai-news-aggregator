@@ -1,21 +1,41 @@
-// File: components/dashboard/AddSourceModal.tsx
-import React, { useState, FormEvent } from 'react';
+// File: components/sources/EditSourceModal.tsx
+import React, { useState, useEffect, FormEvent } from 'react';
+import { ISource } from '../../models/Source'; // Adjust path if needed
 
-interface AddSourceModalProps {
+interface EditSourceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSourceAdded: () => void; // Callback to refresh the sources list
+  onSourceUpdated: () => void; // Callback to refresh the sources list
+  sourceToEdit: ISource | null;
 }
 
-const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSourceAdded }) => {
+const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSourceUpdated, sourceToEdit }) => {
   const [name, setName] = useState<string>('');
   const [url, setUrl] = useState<string>('');
   const [type, setType] = useState<'rss' | 'html'>('rss');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (sourceToEdit) {
+      setName(sourceToEdit.name);
+      setUrl(sourceToEdit.url);
+      setType(sourceToEdit.type);
+    } else {
+      // Reset form if sourceToEdit becomes null (e.g., modal closed and reopened without a source)
+      setName('');
+      setUrl('');
+      setType('rss');
+    }
+  }, [sourceToEdit]); // Re-populate form when sourceToEdit changes
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!sourceToEdit || !sourceToEdit._id) {
+      setFormError('No source selected for editing.');
+      return;
+    }
+
     setIsSubmitting(true);
     setFormError(null);
 
@@ -26,38 +46,42 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
     }
 
     try {
-      const response = await fetch('/api/sources', {
-        method: 'POST',
+      const response = await fetch(`/api/sources/${sourceToEdit._id.toString()}`, { // Using your /api/sources/[sourceId] PUT endpoint
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, url, type, isEnabled: true }), // isEnabled defaults to true
+        // Send all editable fields. The backend PUT handler only updates fields that are present.
+        body: JSON.stringify({ name, url, type }),
       });
+
+      // Check if response is actually JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error(`Server returned non-JSON response. Status: ${response.status}`);
+      }
 
       const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(responseData.error || responseData.message || `Failed to add source (status: ${response.status})`);
+        throw new Error(responseData.error || responseData.message || `Failed to update source (status: ${response.status})`);
       }
 
-      // Success
-      onSourceAdded(); // Trigger refresh of the source list in the parent
+      onSourceUpdated(); // Trigger refresh of the source list
       onClose();       // Close the modal
-      // Reset form for next time
-      setName('');
-      setUrl('');
-      setType('rss');
 
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while updating.';
       setFormError(errorMessage);
-      console.error('Failed to add source:', err);
+      console.error('Failed to update source:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) {
+  if (!isOpen || !sourceToEdit) { // Don't render if not open or no source to edit
     return null;
   }
 
@@ -65,7 +89,7 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center p-4">
       <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-md transform transition-all">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Add New Source</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Edit Source</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -83,47 +107,45 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
           )}
 
           <div className="mb-4">
-            <label htmlFor="sourceName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="editSourceName" className="block text-sm text-gray-700 mb-1 font-semibold">
               Source Name
             </label>
             <input
               type="text"
-              id="sourceName"
+              id="editSourceName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="e.g., My Favorite Tech Blog"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label htmlFor="sourceUrl" className="block text-sm font-medium text-gray-700 mb-1">
-              URL (RSS Feed or Webpage)
+            <label htmlFor="editSourceUrl" className="block text-sm text-gray-700 mb-1 font-semibold">
+              URL
             </label>
             <input
               type="url"
-              id="sourceUrl"
+              id="editSourceUrl"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="https://example.com/feed"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label htmlFor="sourceType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="editSourceType" className="block text-sm text-gray-700 mb-1 font-semibold">
               Source Type
             </label>
             <select
-              id="sourceType"
+              id="editSourceType"
               value={type}
               onChange={(e) => setType(e.target.value as 'rss' | 'html')}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
             >
               <option value="rss">RSS Feed</option>
-              <option value="html">HTML Webpage (for scraping)</option>
+              <option value="html">HTML Webpage</option>
             </select>
           </div>
 
@@ -141,7 +163,7 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:bg-indigo-400"
             >
-              {isSubmitting ? 'Adding...' : 'Add Source'}
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>
@@ -150,4 +172,4 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
   );
 };
 
-export default AddSourceModal;
+export default EditSourceModal;
