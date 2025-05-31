@@ -12,7 +12,7 @@ import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
 // HTML Scraping
 import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
 import { getWebsiteConfig } from '../scrapers/websiteConfigs';
-import { getEffectiveArticleLimit, logArticleLimitConfig } from '../config/articleLimits';
+import { getMaxArticlesPerSource } from '../config/articleLimits';
 
 // --- Interface Definitions ---
 
@@ -22,7 +22,6 @@ export interface SourceToFetch {
     name: string;
     scrapingConfig?: {
         websiteId: string;
-        maxArticles?: number;
         customSelectors?: {
             articleSelector?: string;
             titleSelector?: string;
@@ -92,9 +91,6 @@ const fetchWithUserAgent = async (url: string): Promise<Response> => {
 export async function fetchParseAndStoreSource(
     source: SourceToFetch
 ): Promise<ProcessingSummary> {
-    // Log current article limit configuration for debugging
-    logArticleLimitConfig();
-
     const summary: ProcessingSummary = {
         sourceUrl: source.url,
         sourceName: source.name,
@@ -126,12 +122,12 @@ export async function fetchParseAndStoreSource(
             let itemsToProcess = parsedFeed.items || [];
             let limitMessagePart = '';
 
-            // Get effective article limit using centralized logic
-            const effectiveMaxArticles = getEffectiveArticleLimit();
+            // Get the maximum articles limit from environment variable
+            const maxArticles = getMaxArticlesPerSource();
 
-            if (effectiveMaxArticles && itemsToProcess.length > effectiveMaxArticles) {
-                console.log(`Fetcher: Source ${source.name} has ${itemsToProcess.length} items, limiting to first ${effectiveMaxArticles}.`);
-                itemsToProcess = itemsToProcess.slice(0, effectiveMaxArticles);
+            if (maxArticles && itemsToProcess.length > maxArticles) {
+                console.log(`Fetcher: Source ${source.name} has ${itemsToProcess.length} items, limiting to first ${maxArticles}.`);
+                itemsToProcess = itemsToProcess.slice(0, maxArticles);
                 limitMessagePart = ` (limited to first ${itemsToProcess.length} of ${summary.itemsFound} found).`;
             }
             summary.itemsConsidered = itemsToProcess.length; // Number of items we will iterate over
@@ -213,11 +209,7 @@ export async function fetchParseAndStoreSource(
             // Merge custom selectors with website config
             const mergedConfig: ScrapingConfig = {
                 ...websiteConfig,
-                maxArticles: getEffectiveArticleLimit(
-                    source.scrapingConfig.maxArticles,
-                    websiteConfig.maxArticles,
-                    20
-                ),
+                maxArticles: getMaxArticlesPerSource(),
                 ...(source.scrapingConfig.customSelectors && {
                     articleSelector: source.scrapingConfig.customSelectors.articleSelector || websiteConfig.articleSelector,
                     titleSelector: source.scrapingConfig.customSelectors.titleSelector || websiteConfig.titleSelector,

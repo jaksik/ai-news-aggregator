@@ -1,55 +1,45 @@
 /**
- * Test script to verify the centralized article limit system
- * This script tests all components of the article limiting functionality
+ * Test script to verify the simplified article limit system
+ * This script tests the single source of truth for article limits
  */
 
-const { getMaxArticlesPerSource, getEffectiveArticleLimit, logArticleLimitConfig } = require('./lib/config/articleLimits');
+const { getMaxArticlesPerSource } = require('./lib/config/articleLimits');
 
 async function runTests() {
   // Test environment variable reading
-  console.log('=== Testing Article Limit Configuration ===\n');
+  console.log('=== Testing Simplified Article Limit Configuration ===\n');
 
   // Test 1: Environment variable reading
   console.log('Test 1: Environment Variable Reading');
-  const envLimit = getMaxArticlesPerSource();
-  console.log(`MAX_ARTICLES_PER_SOURCE from env: ${envLimit}`);
-  console.log(`Expected: 3 (from .env.local)`);
-  console.log(`✓ ${envLimit === 3 ? 'PASS' : 'FAIL'}\n`);
+  const maxArticles = getMaxArticlesPerSource();
+  console.log(`getMaxArticlesPerSource(): ${maxArticles}`);
+  console.log(`Current MAX_ARTICLES_PER_SOURCE from env: ${process.env.MAX_ARTICLES_PER_SOURCE}`);
+  console.log(`Expected: 5 (from .env.local)`);
+  console.log(`✓ ${maxArticles === 5 ? 'PASS' : 'FAIL'}\n`);
 
-  // Test 2: Effective limit calculation with global override
-  console.log('Test 2: Global Limit Override');
-  const effectiveLimit1 = getEffectiveArticleLimit(10, 20, 30);
-  console.log(`getEffectiveArticleLimit(10, 20, 30): ${effectiveLimit1}`);
-  console.log(`Expected: 3 (global env should override all)`);
-  console.log(`✓ ${effectiveLimit1 === 3 ? 'PASS' : 'FAIL'}\n`);
-
-  // Test 3: Test with no arguments (should use global)
-  console.log('Test 3: Default Behavior with Global Limit');
-  const effectiveLimit2 = getEffectiveArticleLimit();
-  console.log(`getEffectiveArticleLimit(): ${effectiveLimit2}`);
-  console.log(`Expected: 3 (global env should be used)`);
-  console.log(`✓ ${effectiveLimit2 === 3 ? 'PASS' : 'FAIL'}\n`);
-
-  // Test 4: Log configuration
-  console.log('Test 4: Configuration Logging');
-  logArticleLimitConfig();
-  console.log(`✓ Configuration logged successfully\n`);
-
-  // Test 5: Test behavior when environment variable is temporarily unset
-  console.log('Test 5: Behavior without Environment Variable');
+  // Test 2: Default behavior when environment variable is not set
+  console.log('Test 2: Default Behavior without Environment Variable');
   const originalEnv = process.env.MAX_ARTICLES_PER_SOURCE;
   delete process.env.MAX_ARTICLES_PER_SOURCE;
 
-  const effectiveLimit3 = getEffectiveArticleLimit(5, 10, 15);
-  console.log(`getEffectiveArticleLimit(5, 10, 15) without env: ${effectiveLimit3}`);
-  console.log(`Expected: 5 (should use source-specific when no global limit)`);
-  console.log(`✓ ${effectiveLimit3 === 5 ? 'PASS' : 'FAIL'}\n`);
+  const defaultLimit = getMaxArticlesPerSource();
+  console.log(`getMaxArticlesPerSource() without env: ${defaultLimit}`);
+  console.log(`Expected: 20 (default fallback)`);
+  console.log(`✓ ${defaultLimit === 20 ? 'PASS' : 'FAIL'}\n`);
+
+  // Test 3: Invalid environment variable handling
+  console.log('Test 3: Invalid Environment Variable Handling');
+  process.env.MAX_ARTICLES_PER_SOURCE = 'invalid';
+  const invalidLimit = getMaxArticlesPerSource();
+  console.log(`getMaxArticlesPerSource() with invalid env: ${invalidLimit}`);
+  console.log(`Expected: 20 (default fallback for invalid value)`);
+  console.log(`✓ ${invalidLimit === 20 ? 'PASS' : 'FAIL'}\n`);
 
   // Restore environment variable
   process.env.MAX_ARTICLES_PER_SOURCE = originalEnv;
 
   console.log('=== All Tests Complete ===');
-  console.log('The centralized article limit system is working correctly!');
+  console.log('System now uses a single source of truth: MAX_ARTICLES_PER_SOURCE environment variable');
 }
 
 runTests().catch(console.error);

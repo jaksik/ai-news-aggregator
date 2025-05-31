@@ -1,14 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getMaxArticlesPerSource, getEffectiveArticleLimit, logArticleLimitConfig } from '../../../lib/config/articleLimits';
+import { getMaxArticlesPerSource } from '../../../lib/config/articleLimits';
 
 type Data = {
   envValue?: string;
-  globalLimit?: number | null;
-  effectiveLimit?: number;
+  maxArticles?: number;
   tests?: {
     [key: string]: {
-      result: number | null;
-      expected: number | null;
+      result: number;
+      expected: number;
       pass: boolean;
     };
   };
@@ -35,25 +34,18 @@ export default function handler(
     };
 
     const envValue = process.env.MAX_ARTICLES_PER_SOURCE;
-    const globalLimit = getMaxArticlesPerSource();
-    
-    logArticleLimitConfig();
+    const maxArticles = getMaxArticlesPerSource();
     
     const tests = {
       envVariableReading: {
-        result: globalLimit,
-        expected: 3,
-        pass: globalLimit === 3
+        result: maxArticles,
+        expected: 5, // Current value in .env.local
+        pass: maxArticles === 5
       },
-      globalOverride: {
-        result: getEffectiveArticleLimit(10, 20, 30),
-        expected: 3,
-        pass: getEffectiveArticleLimit(10, 20, 30) === 3
-      },
-      defaultBehavior: {
-        result: getEffectiveArticleLimit(),
-        expected: 3,
-        pass: getEffectiveArticleLimit() === 3
+      envVariableHandling: {
+        result: maxArticles,
+        expected: envValue ? parseInt(envValue) : 20,
+        pass: maxArticles === (envValue ? parseInt(envValue) : 20)
       }
     };
 
@@ -62,8 +54,7 @@ export default function handler(
 
     res.status(200).json({
       envValue,
-      globalLimit,
-      effectiveLimit: getEffectiveArticleLimit(),
+      maxArticles,
       tests,
       logs
     });

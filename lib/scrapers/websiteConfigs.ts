@@ -7,7 +7,6 @@ export const websiteConfigs: Record<string, ScrapingConfig> = {
     baseUrl: 'https://www.anthropic.com',
     articleSelector: 'a[href*="/news/"]',
     dateSelector: '.PostList_post-date__djrOA, .PostCard_post-timestamp__etH9K',
-    maxArticles: 20,
     skipArticlesWithoutDates: true, // Skip featured articles that don't have proper date elements
     titleCleaning: {
       removePrefixes: ['Featured', 'Announcements', 'Product', 'Policy', 'Societal Impacts', 'Interpretability', 'Alignment', 'Education', 'Event'],
