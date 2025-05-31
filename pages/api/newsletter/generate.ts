@@ -25,7 +25,7 @@ export default async function handler(
   }
 
   try {
-    const { daysBack = 2, forceRegenerate = false }: GenerateNewsletterRequest = req.body;
+    const { daysBack = 2 }: GenerateNewsletterRequest = req.body;
 
     await dbConnect();
 
@@ -193,11 +193,26 @@ Return a JSON array with objects for each article in the same order. Focus on:
     throw new Error('No response from OpenAI');
   }
 
+  // Clean the response - remove markdown code blocks if present
+  let cleanedResponse = aiResponse.trim();
+  if (cleanedResponse.startsWith('```json')) {
+    cleanedResponse = cleanedResponse.slice(7); // Remove ```json
+  }
+  if (cleanedResponse.startsWith('```')) {
+    cleanedResponse = cleanedResponse.slice(3); // Remove ```
+  }
+  if (cleanedResponse.endsWith('```')) {
+    cleanedResponse = cleanedResponse.slice(0, -3); // Remove closing ```
+  }
+  cleanedResponse = cleanedResponse.trim();
+
   let aiResults;
   try {
-    aiResults = JSON.parse(aiResponse);
+    aiResults = JSON.parse(cleanedResponse);
   } catch (parseError) {
     console.error('Failed to parse AI response:', aiResponse);
+    console.error('Cleaned response:', cleanedResponse);
+    console.error('Parse error:', parseError);
     throw new Error('Invalid JSON response from AI');
   }
 
@@ -325,7 +340,6 @@ function removeDuplicates(items: INewsletterItem[]): INewsletterItem[] {
 }
 
 function ensureSourceDiversity(items: INewsletterItem[]): INewsletterItem[] {
-  const sourceCounts = new Map<string, number>();
   const diverseItems: INewsletterItem[] = [];
   const maxPerSource = 2; // Maximum articles per source per category
   

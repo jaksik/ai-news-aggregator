@@ -3,11 +3,10 @@ import { INewsletter, INewsletterItem } from '../../models/Newsletter';
 
 interface NewsletterPreviewProps {
   newsletter: INewsletter;
-  onEdit?: (newsletter: INewsletter) => void;
   onSave?: (newsletter: INewsletter) => void;
 }
 
-const NewsletterPreview: React.FC<NewsletterPreviewProps> = ({ newsletter, onEdit, onSave }) => {
+const NewsletterPreview: React.FC<NewsletterPreviewProps> = ({ newsletter, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editableNewsletter, setEditableNewsletter] = useState(newsletter);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -117,7 +116,10 @@ const NewsletterPreview: React.FC<NewsletterPreviewProps> = ({ newsletter, onEdi
 
   const updateItemField = (sectionKey: keyof typeof editableNewsletter.sections, index: number, field: keyof INewsletterItem, value: string) => {
     const newNewsletter = { ...editableNewsletter };
-    (newNewsletter.sections[sectionKey][index] as any)[field] = value;
+    const item = newNewsletter.sections[sectionKey][index];
+    if (item) {
+      (item as unknown as Record<string, unknown>)[field] = value;
+    }
     setEditableNewsletter(newNewsletter);
   };
 
@@ -230,7 +232,7 @@ const NewsletterPreview: React.FC<NewsletterPreviewProps> = ({ newsletter, onEdi
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700">
               💡 <strong>Edit Mode:</strong> Click on headlines and summaries to edit them directly. 
-              Changes will be saved when you click "Save Changes".
+              Changes will be saved when you click &quot;Save Changes&quot;.
             </p>
           </div>
         )}

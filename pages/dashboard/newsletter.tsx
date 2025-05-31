@@ -9,7 +9,6 @@ const NewsletterPage: React.FC = () => {
   const [newsletters, setNewsletters] = useState<INewsletter[]>([]);
   const [currentNewsletter, setCurrentNewsletter] = useState<INewsletter | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Fetch existing newsletters
   const fetchNewsletters = async () => {
@@ -22,7 +21,7 @@ const NewsletterPage: React.FC = () => {
       const data = await response.json();
       setNewsletters(data.newsletters || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error('Failed to fetch newsletters:', err);
     } finally {
       setLoading(false);
     }

@@ -26,7 +26,7 @@ export default async function handler(
     const status = req.query.status as string;
 
     // Build query
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     if (status) {
       query.status = status;
     }
