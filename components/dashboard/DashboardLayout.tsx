@@ -11,18 +11,21 @@ interface DashboardLayoutProps {
   pageTitle?: string;
 }
 
-// Add the new "Controls" page to your navigation items
-const navItems = [
-  { href: '/dashboard/articles', label: 'Article Feed', icon: '📰' },
-  { href: '/dashboard/newsletter', label: 'Newsletter', icon: '📬' },
-  { href: '/dashboard/sources', label: 'Manage Sources', icon: '🌐' },
-  { href: '/dashboard/logs', label: 'Fetch Logs', icon: '📊' },
-  { href: '/dashboard/controls', label: 'Fetch Controls', icon: '🕹️' },
-];
+interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  category: 'content' | 'management' | 'tools';
+}
 
-const toolItems = [
-  { href: '/dashboard/tools', label: 'Tools', icon: '🛠️' },
-  { href: '/dashboard/tools/create', label: 'Create Tool', icon: '➕' },
+// Consolidated navigation items with categories
+const navItems: NavItem[] = [
+  { href: '/dashboard/articles', label: 'Article Feed', icon: '📰', category: 'management' },
+  { href: '/dashboard/newsletter', label: 'Newsletter', icon: '📬', category: 'content' },
+  { href: '/dashboard/articles/sources', label: 'Manage Sources', icon: '🌐', category: 'management' },
+  { href: '/dashboard/logs', label: 'Fetch Logs', icon: '📊', category: 'management' },
+  { href: '/dashboard/tools', label: 'Tools', icon: '🛠️', category: 'tools' },
+  { href: '/dashboard/tools/create', label: 'Create Tool', icon: '➕', category: 'tools' },
 ];
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle = "News Aggregator Dashboard" }) => {
@@ -48,42 +51,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
             <p className="text-xs text-slate-400 mt-1">Personal News Feed</p>
           </div>
           <nav className="mt-8">
-            <ul className="space-y-2">
-              {navItems.map((item) => (
-                <li key={item.label}>
-                  <Link href={item.href} legacyBehavior>
-                    <a
-                      className={`flex items-center py-2.5 px-4 rounded-md transition duration-200 ease-in-out
-                        ${router.pathname === item.href || (item.href !== '/dashboard' && router.pathname.startsWith(item.href))
-                          ? 'bg-slate-900 text-white font-semibold shadow-inner'
-                          : 'hover:bg-slate-700 hover:text-white'
-                        }`}
-                    >
-                      <span className="mr-3 text-lg">{item.icon}</span>
-                      {item.label}
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <ul className="space-y-2 pt-6 border-t border-slate-700">
-              {toolItems.map((item) => (
-                <li key={item.label}>
-                  <Link href={item.href} legacyBehavior>
-                    <a
-                      className={`flex items-center py-2.5 px-4 rounded-md transition duration-200 ease-in-out
-                        ${router.pathname === item.href
-                          ? 'bg-slate-900 text-white font-semibold shadow-inner'
-                          : 'hover:bg-slate-700 hover:text-white'
-                        }`}
-                    >
-                      <span className="mr-3 text-lg">{item.icon}</span>
-                      {item.label}
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* Group nav items by category */}
+            {Object.entries(
+              navItems.reduce((groups, item) => {
+                if (!groups[item.category]) {
+                  groups[item.category] = [];
+                }
+                groups[item.category].push(item);
+                return groups;
+              }, {} as Record<string, typeof navItems>)
+            ).map(([category, items], groupIndex) => (
+              <div key={category} className={groupIndex > 0 ? 'pt-6 border-t border-slate-700' : ''}>
+                <ul className="space-y-2">
+                  {items.map((item) => (
+                    <li key={item.label}>
+                      <Link href={item.href} legacyBehavior>
+                        <a
+                          className={`flex items-center py-2.5 px-4 rounded-md transition duration-200 ease-in-out
+                            ${router.pathname === item.href
+                              ? 'bg-slate-900 text-white font-semibold shadow-inner'
+                              : 'hover:bg-slate-700 hover:text-white'
+                            }`}
+                        >
+                          <span className="mr-3 text-lg">{item.icon}</span>
+                          {item.label}
+                        </a>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </nav>
 
           {/* User Info and Sign Out */}

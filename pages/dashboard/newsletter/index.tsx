@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import AuthWrapper from '../../components/auth/AuthWrapper';
-import NewsletterGenerator from '../../components/newsletter/NewsletterGenerator';
-import NewsletterPreview from '../../components/newsletter/NewsletterPreview';
-import { INewsletter } from '../../models/Newsletter';
+import DashboardLayout from '../../../components/dashboard/DashboardLayout';
+import AuthWrapper from '../../../components/auth/AuthWrapper';
+import NewsletterGenerator from '../../../components/newsletter/NewsletterGenerator';
+import NewsletterPreview from '../../../components/newsletter/NewsletterPreview';
+import { INewsletter } from '../../../models/Newsletter';
 
 const NewsletterPage: React.FC = () => {
   const [newsletters, setNewsletters] = useState<INewsletter[]>([]);
