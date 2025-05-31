@@ -130,6 +130,33 @@ const MainDashboardPage: React.FC = () => {
     }
   }, [currentFilters.includeHidden]);
 
+  // Handle article deletion
+  const handleArticleDelete = useCallback(async (articleId: string) => {
+    try {
+      // Delete the article on the server
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Remove the article from local state immediately
+      setArticles(prevArticles => 
+        prevArticles.filter(article => article._id !== articleId)
+      );
+
+      // Update total count
+      setTotal(prevTotal => Math.max(0, prevTotal - 1));
+
+    } catch (err) {
+      console.error('Failed to delete article:', err);
+      throw err; // Re-throw so the component can handle the error
+    }
+  }, []);
+
   // Load articles on initial page load
   useEffect(() => {
     const initialFilters: FilterOptions = {
@@ -185,6 +212,7 @@ const MainDashboardPage: React.FC = () => {
           total={total}
           loading={loading}
           onArticleVisibilityChange={handleArticleVisibilityChange}
+          onArticleDelete={handleArticleDelete}
         />
       </DashboardLayout>
     </AuthWrapper>
