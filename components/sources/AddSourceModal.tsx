@@ -11,6 +11,7 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
   const [name, setName] = useState<string>('');
   const [url, setUrl] = useState<string>('');
   const [type, setType] = useState<'rss' | 'html'>('rss');
+  const [websiteId, setWebsiteId] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -25,13 +26,37 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
       return;
     }
 
+    if (type === 'html' && !websiteId.trim()) {
+      setFormError('Website ID is required for HTML sources.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
+      const requestBody: {
+        name: string;
+        url: string;
+        type: string;
+        isEnabled: boolean;
+        scrapingConfig?: {
+          websiteId: string;
+          customSelectors?: Record<string, string>;
+        };
+      } = { name, url, type, isEnabled: true };
+      
+      // Add scrapingConfig for HTML sources
+      if (type === 'html') {
+        requestBody.scrapingConfig = {
+          websiteId: websiteId
+        };
+      }
+
       const response = await fetch('/api/sources', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, url, type, isEnabled: true }), // isEnabled defaults to true
+        body: JSON.stringify(requestBody),
       });
 
       const responseData = await response.json();
@@ -47,6 +72,7 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
       setName('');
       setUrl('');
       setType('rss');
+      setWebsiteId('');
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
@@ -126,6 +152,29 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
               <option value="html">HTML Webpage (for scraping)</option>
             </select>
           </div>
+
+          {type === 'html' && (
+            <div className="mb-6">
+              <label htmlFor="websiteId" className="block text-sm font-medium text-gray-700 mb-1">
+                Website Configuration
+              </label>
+              <select
+                id="websiteId"
+                value={websiteId}
+                onChange={(e) => setWebsiteId(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                required
+              >
+                <option value="">Select a website configuration...</option>
+                <option value="anthropic-news">Anthropic News</option>
+                <option value="elevenlabs-blog">ElevenLabs Blog</option>
+                <option value="scale-blog">Scale AI Blog</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Choose the pre-configured website scraping settings that match your target site.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-end space-x-3">
             <button

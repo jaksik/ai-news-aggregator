@@ -24,6 +24,17 @@ export const websiteConfigs: Record<string, ScrapingConfig> = {
     dateSelector: 'time, .date, .published',
     skipArticlesWithoutDates: true, // Skip featured articles that don't have proper date elements
 
+  },
+
+  'scale-blog': {
+    websiteId: 'scale-blog',
+    name: 'Scale AI Blog',
+    baseUrl: 'https://scale.com',
+    articleSelector: 'a[href*="/blog/"], article, .blog-post, [data-post]',
+    titleSelector: 'h1, h2, h3, .title, .blog-title',
+    descriptionSelector: 'p, .excerpt, .summary, .description',
+    dateSelector: 'time, .date, .published, [datetime]',
+    skipArticlesWithoutDates: false, // Scale AI might not always show dates prominently
   }
 };
 
