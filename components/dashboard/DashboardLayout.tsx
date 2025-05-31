@@ -71,7 +71,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
                   <Link href={item.href} legacyBehavior>
                     <a
                       className={`flex items-center py-2.5 px-4 rounded-md transition duration-200 ease-in-out
-                        ${router.pathname === item.href || (item.href !== '/dashboard' && router.pathname.startsWith(item.href))
+                        ${router.pathname === item.href
                           ? 'bg-slate-900 text-white font-semibold shadow-inner'
                           : 'hover:bg-slate-700 hover:text-white'
                         }`}
