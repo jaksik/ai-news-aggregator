@@ -1,7 +1,7 @@
 import React from 'react';
-import DashboardLayout from '../../components/dashboard/DashboardLayout'; // Adjust path
-import AuthWrapper from '../../components/auth/AuthWrapper';
-import FetchAllSourcesControl from '../../components/dashboard/controls/FetchAllSourcesControl'; // Adjust path
+import DashboardLayout from '../../../components/dashboard/DashboardLayout'; // Adjust path
+import AuthWrapper from '../../../components/auth/AuthWrapper';
+import FetchAllSourcesControl from '../../../components/dashboard/controls/FetchAllSourcesControl'; // Adjust path
 
 const ControlsPage: React.FC = () => {
   return (

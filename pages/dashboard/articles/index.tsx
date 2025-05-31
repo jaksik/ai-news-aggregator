@@ -1,11 +1,11 @@
 // File: pages/dashboard/index.tsx
 import React, { useEffect, useState, useCallback } from 'react'; // Added useCallback
-import DashboardLayout from '../../components/dashboard/DashboardLayout';
-import ArticleList from '../../components/dashboard/ArticleList';
-import AuthWrapper from '../../components/auth/AuthWrapper';
-import { IArticle } from '../../models/Article';
-import { SortOption } from '../../components/ui/SortControls';
-import { sortArticles } from '../../lib/utils/sortUtils';
+import DashboardLayout from '../../../components/dashboard/DashboardLayout';
+import ArticleList from '../../../components/dashboard/ArticleList';
+import AuthWrapper from '../../../components/auth/AuthWrapper';
+import { IArticle } from '../../../models/Article';
+import { SortOption } from '../../../components/ui/SortControls';
+import { sortArticles } from '../../../lib/utils/sortUtils';
 
 interface FetchArticlesApiResponse {
   articles?: IArticle[];
