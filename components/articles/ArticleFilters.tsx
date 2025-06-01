@@ -353,7 +353,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-0.5 mb-1">
+          <div className="grid grid-cols-2 gap-0.5 mb-1">
             {LIMIT_PRESETS.slice(3).map((limit) => (
               <button
                 key={limit}
@@ -367,16 +367,6 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
                 {limit}
               </button>
             ))}
-            <button
-              onClick={() => handleFilterChange('limit', 0)}
-              className={`px-1 py-1 rounded text-xs ${
-                filters.limit === 0
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white border border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              All
-            </button>
           </div>
           
           {/* Hidden Toggle */}
