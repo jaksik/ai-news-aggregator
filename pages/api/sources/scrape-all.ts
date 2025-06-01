@@ -1,6 +1,6 @@
-// File: pages/api/sources/fetch.ts
+// File: pages/api/sources/scrape-all.ts
 // Purpose: Serves as the main entry point for automated news aggregation, 
-// allowing both scheduled cron jobs and manual admin triggers to fetch articles 
+// allowing both scheduled cron jobs and manual admin triggers to scrape articles 
 // from all enabled news sources at once.
 
 // Flow: Cron/Manual Trigger → Validate Authorization → Process All Sources 
@@ -8,7 +8,7 @@
 
 // Use Cases:
 // Scheduled automated news gathering
-// Manual "Fetch All" admin operations
+// Manual "Scrape All" admin operations
 // Bulk content updates
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -29,7 +29,7 @@ export default async function handler(
     // Authorization Check
     if (!isDevelopment) {
       if (!expectedSecret) {
-        console.error('API /api/sources/fetch: CRITICAL - CRON_SECRET is not set in this environment. Denying access.');
+        console.error('API /api/sources/scrape-all: CRITICAL - CRON_SECRET is not set in this environment. Denying access.');
         return res.status(503).json({ error: 'Service unavailable due to server configuration error.' });
       }
       
@@ -38,28 +38,28 @@ export default async function handler(
       const providedSecret = authHeader?.replace('Bearer ', '') || null;
       
       if (providedSecret !== expectedSecret) {
-        console.warn(`API /api/sources/fetch: Unauthorized attempt. Expected secret but received: [${providedSecret ? 'provided_secret_hidden' : 'nothing'}]`);
+        console.warn(`API /api/sources/scrape-all: Unauthorized attempt. Expected secret but received: [${providedSecret ? 'provided_secret_hidden' : 'nothing'}]`);
         console.warn(`Auth header:`, authHeader ? 'present' : 'missing');
         console.warn(`Headers received:`, Object.keys(req.headers));
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      console.log('API /api/sources/fetch: Authorized via authorization header.');
+      console.log('API /api/sources/scrape-all: Authorized via authorization header.');
 
     } else {
-      console.log('API /api/sources/fetch: Authorization check skipped in development mode.');
+      console.log('API /api/sources/scrape-all: Authorization check skipped in development mode.');
     }
 
-    console.log(`API /api/sources/fetch: Processing ${req.method} request.`);
+    console.log(`API /api/sources/scrape-all: Processing ${req.method} request.`);
     try {
       await dbConnect();
       const result = await processAllEnabledSources();
-      console.log(`API /api/sources/fetch: Orchestration complete. Added ${result.totalNewArticlesAddedAcrossAllSources} new articles.`);
+      console.log(`API /api/sources/scrape-all: Orchestration complete. Added ${result.totalNewArticlesAddedAcrossAllSources} new articles.`);
       return res.status(200).json(result);
     } catch (error: unknown) {
-      console.error('API /api/sources/fetch CRITICAL ERROR:', error);
+      console.error('API /api/sources/scrape-all CRITICAL ERROR:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       return res.status(500).json({ 
-        error: 'Failed to execute fetch-all-sources process.', 
+        error: 'Failed to execute scrape-all-sources process.', 
         message: errorMessage 
       });
     }

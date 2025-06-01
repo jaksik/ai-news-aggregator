@@ -1,21 +1,37 @@
 // File: pages/dashboard/logs/index.tsx
 import React, { useEffect, useState, useCallback } from 'react';
-import DashboardLayout from '../../../components/dashboard/DashboardLayout';
-import AuthWrapper from '../../../components/auth/AuthWrapper';
-import { IFetchRunLog } from '../../../models/FetchRunLog';
-import LogsTable from '../../../components/logs/LogsTable';
-import LogsPagination from '../../../components/logs/LogsPagination';
-import LoadingSpinner from '../../../components/logs/LoadingSpinner';
-import ErrorDisplay from '../../../components/logs/ErrorDisplay';
-import EmptyLogsState from '../../../components/logs/EmptyLogsState';
+import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
+import AuthWrapper from '../../../../components/auth/AuthWrapper';
+import { IFetchRunLog } from '../../../../models/FetchRunLog';
+import LogsTable from '../../../../components/logs/LogsTable';
+import LogsPagination from '../../../../components/logs/LogsPagination';
+import LoadingSpinner from '../../../../components/logs/LoadingSpinner';
+import ErrorDisplay from '../../../../components/logs/ErrorDisplay';
+import EmptyLogsState from '../../../../components/logs/EmptyLogsState';
+
+interface LogsFilters {
+  status?: string;
+  sourceId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
 
 interface FetchLogsApiResponse {
-  logs?: IFetchRunLog[];
-  totalLogs?: number;
-  page?: number;
-  limit?: number;
-  error?: string;
+  success?: boolean;
+  data?: {
+    logs?: IFetchRunLog[];
+    pagination?: {
+      page?: number;
+      limit?: number;
+      total?: number;
+      totalPages?: number;
+      hasNext?: boolean;
+      hasPrev?: boolean;
+    };
+    filters?: LogsFilters;
+  };
   message?: string;
+  error?: string;
 }
 
 const LogsPage: React.FC = () => {
@@ -38,10 +54,10 @@ const LogsPage: React.FC = () => {
         throw new Error(errorData.error || errorData.message || `Failed to fetch logs: ${response.status}`);
       }
       const data: FetchLogsApiResponse = await response.json();
-      setLogs(data.logs || []);
-      setTotalLogs(data.totalLogs || 0);
-      if (data.totalLogs && data.limit) {
-        setTotalPages(Math.ceil(data.totalLogs / data.limit));
+      setLogs(data.data?.logs || []);
+      setTotalLogs(data.data?.pagination?.total || 0);
+      if (data.data?.pagination?.total && data.data?.pagination?.limit) {
+        setTotalPages(Math.ceil(data.data.pagination.total / data.data.pagination.limit));
       } else {
         setTotalPages(1);
       }

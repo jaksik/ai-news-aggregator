@@ -21,12 +21,13 @@ const SourcesPage: React.FC = () => {
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
 
-  const fetchSources = useCallback(async () => { /* ... same ... */
+  const fetchSources = useCallback(async () => {
     setLoading(true); setError(null); setActionError(null);
     try {
       const response = await fetch('/api/sources');
       if (!response.ok) { const d = await response.json(); throw new Error(d.error || 'Failed'); }
-      const data = await response.json(); setSources(data.sources || []);
+      const data = await response.json(); 
+      setSources(data.data || []); // Fixed: use data.data instead of data.sources
     } catch (error: unknown) { 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setError(errorMessage); 
@@ -121,7 +122,7 @@ const SourcesPage: React.FC = () => {
     setOpenDropdownSourceId(null); // Close dropdown first
     setIsSubmittingAction(sourceId); setActionError(null);
     try { /* ... same fetch now logic ... */
-      const res = await fetch(`/api/sources/${sourceId}/fetch`, { method: 'POST' });
+      const res = await fetch(`/api/sources/${sourceId}/scrape`, { method: 'POST' });
       const d = await res.json(); if (!res.ok) throw new Error(d.error || 'Failed');
       const logMessage = d.logId ? 
         `Fetch for "${sourceName}" done. Status: ${d.status}, New: ${d.newItemsAdded}. Log ID: ${d.logId}` :

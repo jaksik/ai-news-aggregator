@@ -4,35 +4,40 @@ import Article, { IArticle } from '../../../models/Article';
 import { INewsletter, INewsletterItem, NEWSLETTER_COLLECTION } from '../../../models/Newsletter';
 import mongoose from 'mongoose';
 import OpenAI from 'openai';
+import { withHandler } from '../../../lib/api/middleware';
+import { 
+  createValidationError,
+  createDatabaseError
+} from '../../../lib/errors/errorHandler';
+import { ApiResponse } from '../../../lib/api/types';
 
 interface GenerateNewsletterRequest {
   daysBack?: number;
   forceRegenerate?: boolean;
 }
 
-interface GenerateNewsletterResponse {
-  newsletter?: INewsletter;
-  articlesProcessed?: number;
-  error?: string;
+interface GenerateNewsletterData {
+  newsletter: INewsletter;
+  articlesProcessed: number;
 }
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<GenerateNewsletterResponse>
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  res: NextApiResponse<ApiResponse<GenerateNewsletterData>>
+): Promise<void> {
+  const { daysBack = 2 }: GenerateNewsletterRequest = req.body;
 
   try {
-    const { daysBack = 2 }: GenerateNewsletterRequest = req.body;
-
     await dbConnect();
+  } catch (error) {
+    throw createDatabaseError('Database connection failed', {}, error);
+  }
 
-    // Calculate date range - get articles from last N days
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+  // Calculate date range - get articles from last N days
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
 
+  try {
     // Fetch recent articles that aren't hidden
     const articles = await Article.find({
       publishedDate: { $gte: cutoffDate },
@@ -48,7 +53,7 @@ export default async function handler(
     console.log(`Found ${articles.length} articles to process from last ${daysBack} days`);
 
     if (articles.length === 0) {
-      return res.status(400).json({ error: 'No articles found in the specified date range' });
+      throw createValidationError('No articles found in the specified date range');
     }
 
     // Process articles with AI
@@ -80,26 +85,41 @@ export default async function handler(
       articlesProcessed: articles.length
     };
 
-    // Save to database - for Phase 1, we'll use a simple collection insert
+    // Save to database
     const db = mongoose.connection.db;
     if (!db) {
-      throw new Error('Database connection not available');
+      throw createDatabaseError('Database connection not available');
     }
+    
     const result = await db.collection(NEWSLETTER_COLLECTION).insertOne(newsletter);
     newsletter._id = result.insertedId;
 
     res.status(200).json({
-      newsletter,
-      articlesProcessed: articles.length
+      success: true,
+      data: {
+        newsletter,
+        articlesProcessed: articles.length
+      },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
     });
 
   } catch (error) {
-    console.error('Newsletter generation error:', error);
-    res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to generate newsletter' 
-    });
+    throw createDatabaseError('Failed to generate newsletter', {}, error);
   }
 }
+
+export default withHandler(async (
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<GenerateNewsletterData>>
+) => {
+  if (req.method !== 'POST') {
+    throw createValidationError('Method not allowed');
+  }
+
+  await handler(req, res);
+});
 
 async function processArticlesWithAI(articles: IArticle[]): Promise<INewsletterItem[]> {
   // Initialize OpenAI client

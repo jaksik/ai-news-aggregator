@@ -56,7 +56,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ logs }) => {
                   }
                 </td>
                 <td className="px-5 py-4 text-sm">
-                  <Link href={`/dashboard/logs/${log._id?.toString()}`} legacyBehavior>
+                  <Link href={`/dashboard/articles/fetcher-logs/${log._id?.toString()}`} legacyBehavior>
                     <a className="text-indigo-600 hover:text-indigo-800 hover:underline">
                       View Details
                     </a>

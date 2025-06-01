@@ -1,25 +1,26 @@
-// File: pages/dashboard/logs/[runId].tsx
+// File: pages/dashboard/articles/fetcher-logs/[logId].tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import DashboardLayout from '../../../components/dashboard/DashboardLayout';
-import AuthWrapper from '../../../components/auth/AuthWrapper';
-import { IFetchRunLog } from '../../../models/FetchRunLog';
-import BackToLogs from '../../../components/logs/BackToLogs';
-import LogOverviewCard from '../../../components/logs/LogOverviewCard';
-import SourceSummaryCard from '../../../components/logs/SourceSummaryCard';
-import LoadingSpinner from '../../../components/logs/LoadingSpinner';
-import ErrorDisplay from '../../../components/logs/ErrorDisplay';
-import { formatLogDate } from '../../../components/logs/logUtils';
+import DashboardLayout from '../../../../components/dashboard/DashboardLayout';
+import AuthWrapper from '../../../../components/auth/AuthWrapper';
+import { IFetchRunLog } from '../../../../models/FetchRunLog';
+import BackToLogs from '../../../../components/logs/BackToLogs';
+import LogOverviewCard from '../../../../components/logs/LogOverviewCard';
+import SourceSummaryCard from '../../../../components/logs/SourceSummaryCard';
+import LoadingSpinner from '../../../../components/logs/LoadingSpinner';
+import ErrorDisplay from '../../../../components/logs/ErrorDisplay';
+import { formatLogDate } from '../../../../components/logs/logUtils';
 
 interface FetchLogDetailApiResponse {
-  log?: IFetchRunLog;
-  error?: string;
+  success?: boolean;
+  data?: IFetchRunLog;
   message?: string;
+  error?: string;
 }
 
 const LogDetailPage: React.FC = () => {
   const router = useRouter();
-  const { runId } = router.query;
+  const { logId } = router.query;
 
   const [log, setLog] = useState<IFetchRunLog | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -27,33 +28,33 @@ const LogDetailPage: React.FC = () => {
 
   useEffect(() => {
     // ... (useEffect logic remains the same as your current working version) ...
-    if (typeof runId === 'string') { 
+    if (typeof logId === 'string') { 
       const fetchLogDetail = async () => {
         setLoading(true);
         setError(null);
         try {
-          const response = await fetch(`/api/logs/${runId}`);
+          const response = await fetch(`/api/logs/${logId}`);
           if (!response.ok) {
             const errorData: FetchLogDetailApiResponse = await response.json();
             throw new Error(errorData.error || errorData.message || `Failed to fetch log details: ${response.status}`);
           }
           const data: FetchLogDetailApiResponse = await response.json();
-          setLog(data.log || null);
+          setLog(data.data || null);
         } catch (err: unknown) {
           const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
           setError(errorMessage);
-          console.error(`Failed to fetch log details for ${runId}:`, err);
+          console.error(`Failed to fetch log details for ${logId}:`, err);
           setLog(null);
         } finally {
           setLoading(false);
         }
       };
       fetchLogDetail();
-    } else if (router.isReady && !runId) {
+    } else if (router.isReady && !logId) {
         setLoading(false);
-        setError("Run ID is missing from URL.");
+        setError("Log ID is missing from URL.");
     }
-  }, [runId, router.isReady]);
+  }, [logId, router.isReady]);
 
   if (!router.isReady || loading) {
     return (

@@ -30,50 +30,44 @@ export interface HTMLArticleData {
   publishedDate?: string;
 }
 
+/**
+ * Normalized article data interface for unified processing
+ */
+export interface NormalizedArticleData {
+  title: string;
+  link?: string;
+  publishedDate?: Date;
+  description: string;
+  guid?: string;
+  categories: string[];
+}
+
 export class ArticleProcessor {
   /**
-   * Process an RSS article - check for duplicates and save if new
+   * Unified article processing method - handles both RSS and HTML articles
+   * Consolidates duplicate checking and article creation logic
    */
-  static async processRSSArticle(
-    item: RSSArticleData, 
-    sourceName: string
+  static async processArticle(
+    data: RSSArticleData | HTMLArticleData,
+    sourceName: string,
+    type: 'rss' | 'html'
   ): Promise<ProcessedArticleResult> {
     try {
-      const normalizedLink = item.link?.trim();
-      const itemTitle = item.title?.trim();
-
-      if (!normalizedLink) {
+      const normalizedData = this.normalizeArticleData(data, type);
+      
+      if (!normalizedData.link) {
         return { action: 'skipped', error: 'Item missing link.' };
       }
 
-      // Check for existing article by GUID first, then by link
-      let existingArticle: IArticle | null = null;
-      if (item.guid) {
-        existingArticle = await Article.findOne({ guid: item.guid });
-      }
-      if (!existingArticle && normalizedLink) {
-        existingArticle = await Article.findOne({ link: normalizedLink });
-      }
-
+      // Check for existing article using unified duplicate checking
+      const existingArticle = await this.checkForDuplicate(normalizedData, type);
       if (existingArticle) {
         return { action: 'skipped' };
       }
 
-      // Create new article
-      const newArticleDoc = new Article({
-        title: itemTitle || 'Untitled Article',
-        link: normalizedLink,
-        sourceName: sourceName,
-        publishedDate: item.isoDate ? new Date(item.isoDate) : (item.pubDate ? new Date(item.pubDate) : undefined),
-        descriptionSnippet: item.contentSnippet || item.content?.substring(0, 300),
-        guid: item.guid,
-        fetchedAt: new Date(),
-        isRead: false,
-        isStarred: false,
-        categories: item.categories,
-      });
-
-      await newArticleDoc.save();
+      // Create new article using unified creation logic
+      const newArticle = await this.createArticle(normalizedData, sourceName);
+      await newArticle.save();
       return { action: 'added' };
 
     } catch (error) {
@@ -83,39 +77,94 @@ export class ArticleProcessor {
   }
 
   /**
-   * Process an HTML article - check for duplicates and save if new
+   * Legacy RSS article processing method (maintained for backward compatibility)
+   * @deprecated Use processArticle() instead
+   */
+  static async processRSSArticle(
+    item: RSSArticleData, 
+    sourceName: string
+  ): Promise<ProcessedArticleResult> {
+    return this.processArticle(item, sourceName, 'rss');
+  }
+
+  /**
+   * Legacy HTML article processing method (maintained for backward compatibility) 
+   * @deprecated Use processArticle() instead
    */
   static async processHTMLArticle(
     article: HTMLArticleData, 
     sourceName: string
   ): Promise<ProcessedArticleResult> {
-    try {
-      // Check for existing article by URL
-      const existingArticle = await Article.findOne({ link: article.url });
+    return this.processArticle(article, sourceName, 'html');
+  }
 
-      if (existingArticle) {
-        return { action: 'skipped' };
-      }
-
-      // Create new article
-      const newArticleDoc = new Article({
-        title: article.title,
-        link: article.url,
-        sourceName: sourceName,
-        publishedDate: article.publishedDate ? new Date(article.publishedDate) : new Date(),
-        descriptionSnippet: article.description || '',
-        fetchedAt: new Date(),
-        isRead: false,
-        isStarred: false,
-        categories: [],
-      });
-
-      await newArticleDoc.save();
-      return { action: 'added' };
-
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown database error';
-      return { action: 'skipped', error: message };
+  /**
+   * Normalize article data from different sources into a unified format
+   */
+  private static normalizeArticleData(
+    data: RSSArticleData | HTMLArticleData,
+    type: 'rss' | 'html'
+  ): NormalizedArticleData {
+    if (type === 'rss') {
+      const rssData = data as RSSArticleData;
+      return {
+        title: rssData.title?.trim() || 'Untitled Article',
+        link: rssData.link?.trim(),
+        publishedDate: rssData.isoDate ? new Date(rssData.isoDate) : 
+                      (rssData.pubDate ? new Date(rssData.pubDate) : undefined),
+        description: rssData.contentSnippet || rssData.content?.substring(0, 300) || '',
+        guid: rssData.guid,
+        categories: rssData.categories || []
+      };
+    } else {
+      const htmlData = data as HTMLArticleData;
+      return {
+        title: htmlData.title?.trim() || 'Untitled Article',
+        link: htmlData.url?.trim(),
+        publishedDate: htmlData.publishedDate ? new Date(htmlData.publishedDate) : new Date(),
+        description: htmlData.description || '',
+        categories: []
+      };
     }
+  }
+
+  /**
+   * Check for duplicate articles using unified logic
+   */
+  private static async checkForDuplicate(
+    data: NormalizedArticleData,
+    type: 'rss' | 'html'
+  ): Promise<IArticle | null> {
+    if (!data.link) return null;
+
+    // For RSS articles, check GUID first if available
+    if (type === 'rss' && data.guid) {
+      const existingByGuid = await Article.findOne({ guid: data.guid });
+      if (existingByGuid) return existingByGuid;
+    }
+
+    // Check by URL for all article types
+    return await Article.findOne({ link: data.link });
+  }
+
+  /**
+   * Create new article document using unified logic
+   */
+  private static createArticle(
+    data: NormalizedArticleData,
+    sourceName: string
+  ): IArticle {
+    return new Article({
+      title: data.title,
+      link: data.link,
+      sourceName: sourceName,
+      publishedDate: data.publishedDate,
+      descriptionSnippet: data.description,
+      guid: data.guid,
+      fetchedAt: new Date(),
+      isRead: false,
+      isStarred: false,
+      categories: data.categories
+    });
   }
 }
