@@ -1,3 +1,8 @@
+// Acts as a central hub that ensures all news sources are 
+// properly configured before the fetcher processes them, 
+// preventing runtime errors and providing consistent behavior 
+// across different source types.
+
 import { ScrapingConfig } from '../scrapers/htmlScraper';
 import { getWebsiteConfig } from '../scrapers/websiteConfigs';
 import { getMaxArticlesPerSource } from '../config/articleLimits';

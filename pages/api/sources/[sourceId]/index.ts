@@ -1,4 +1,14 @@
 // File: pages/api/sources/[sourceId]/index.ts
+// Source Management API
+// Purpose: Provides CRUD operations for individual news sources, 
+// allowing the frontend admin interface to update source settings 
+// (enable/disable, change URLs, rename) or remove sources entirely. 
+// This complements the bulk operations and individual fetch endpoints.
+
+// Flow: Frontend Request → Validate Source ID 
+// → Update/Delete Source → Return Results
+
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import dbConnect from '../../../../lib/mongodb';

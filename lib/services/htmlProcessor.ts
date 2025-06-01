@@ -1,12 +1,4 @@
 // File: /lib/services/htmlProcessor.ts
-
-import { ArticleProcessor } from './articleProcessor';
-import { ScraperSelector } from './scraperSelector';
-import { ConfigurationManager, SourceConfiguration } from './configurationManager';
-import { ProcessingSummary, SourceToFetch } from './fetcher';
-import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
-import { EnhancedHTMLScraper } from '../scrapers/puppeteerScraper';
-
 /**
  * HTML-specific processing service that handles website scraping and article extraction.
  * This service is responsible for:
@@ -15,6 +7,14 @@ import { EnhancedHTMLScraper } from '../scrapers/puppeteerScraper';
  * - Article extraction from HTML sources
  * - Error handling and status reporting specific to HTML scraping
  */
+
+import { ArticleProcessor } from './articleProcessor';
+import { ScraperSelector } from './scraperSelector';
+import { ConfigurationManager, SourceConfiguration } from './configurationManager';
+import { ProcessingSummary, SourceToFetch } from './fetcher';
+import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
+import { EnhancedHTMLScraper } from '../scrapers/puppeteerScraper';
+
 export class HTMLProcessor {
 
     /**

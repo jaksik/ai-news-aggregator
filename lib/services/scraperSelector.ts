@@ -1,3 +1,7 @@
+// Purpose: Acts as an intelligent router that automatically selects the most 
+// appropriate scraping method for each website, balancing efficiency (standard scraper) 
+// with capability (enhanced scraper) to handle various website protection mechanisms.
+
 import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
 import { EnhancedHTMLScraper } from '../scrapers/puppeteerScraper';
 

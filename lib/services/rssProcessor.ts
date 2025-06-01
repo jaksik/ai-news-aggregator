@@ -1,10 +1,4 @@
 // File: /lib/services/rssProcessor.ts
-
-import Parser from 'rss-parser';
-import { ArticleProcessor } from './articleProcessor';
-import { ConfigurationManager, SourceConfiguration } from './configurationManager';
-import { ProcessingSummary, SourceToFetch } from './fetcher';
-
 /**
  * RSS-specific processing service that handles RSS feed parsing and article extraction.
  * This service is responsible for:
@@ -13,6 +7,12 @@ import { ProcessingSummary, SourceToFetch } from './fetcher';
  * - Article limiting and processing coordination
  * - Error handling and status reporting specific to RSS feeds
  */
+
+import Parser from 'rss-parser';
+import { ArticleProcessor } from './articleProcessor';
+import { ConfigurationManager, SourceConfiguration } from './configurationManager';
+import { ProcessingSummary, SourceToFetch } from './fetcher';
+
 export class RSSProcessor {
     private static readonly rssParser = new Parser();
 

@@ -1,19 +1,31 @@
 // File: /lib/services/fetcher.ts
+// Key Functionality:
+// 1. Source Processing
+// Fetches content from RSS feeds and HTML websites
+// Uses dedicated processors (RSSProcessor and HTMLProcessor) to parse different content types
+// Extracts articles, titles, URLs, and metadata
+
+// 2. Orchestration
+// processAllEnabledSources() - Main function that processes all enabled news sources
+// fetchParseAndStoreSource() - Handles individual source processing
+// Manages the entire fetch run lifecycle from start to finish
+
+// 3. Logging & Tracking
+// Creates detailed logs of each fetch run in MongoDB
+// Tracks success/failure rates, new articles added, and errors
+// Updates source records with last fetch status and timestamps
+
+// 4. Error Handling
+// Comprehensive error tracking at both source and orchestration levels
 
 import mongoose from 'mongoose'; // Import mongoose for Types.ObjectId
 
 // MongoDB and Models
 import dbConnect from '../mongodb';
-import Source from '../../models/Source'; // ISource import can be removed if not directly used
+import Source from '../../models/Source'; 
 import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
 
-// HTML Scraping - Updated for Phase 4
-// (HTMLScraper and EnhancedHTMLScraper are now handled by HTMLProcessor)
-
-// Service Dependencies - Updated for Phase 4 completion
-// (ArticleProcessor and ScraperSelector are now handled by dedicated processors)
-
-// Dedicated Processors (Phase 4) - Main processing services
+// Import dedicated processors for RSS and HTML content
 import { RSSProcessor } from './rssProcessor';
 import { HTMLProcessor } from './htmlProcessor';
 
@@ -291,3 +303,5 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
     console.log(`Orchestrator: Fetch run finished. Duration: ${(result.endTime.getTime() - result.startTime.getTime()) / 1000}s. Status: ${result.status}.`);
     return result;
 }
+
+

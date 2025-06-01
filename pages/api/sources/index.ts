@@ -1,4 +1,14 @@
 // File: pages/api/sources/index.ts
+// Purpose: Provides core CRUD operations for the news sources collection, 
+// allowing the frontend admin interface to list existing sources and add new ones. 
+// This is the foundation endpoint that works alongside individual source management endpoints.
+
+// Use Cases:
+// Admin dashboard source listing
+// Adding new RSS feeds or HTML sources
+// Source configuration management
+// Initial setup and bulk source operations
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '../../../lib/mongodb';
 import Source, { ISource } from '../../../models/Source';

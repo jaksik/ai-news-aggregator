@@ -1,4 +1,12 @@
 // File: pages/api/sources/[sourceId]/fetch.ts
+// Purpose: Provides a way for the frontend/admin interface to manually trigger fetching 
+// for individual news sources (e.g., "Fetch Now" button), separate from 
+// the automated bulk fetching process. This is useful for testing, immediate updates, 
+// or troubleshooting specific sources.
+
+// Flow: Frontend Request → Validate Source → Create Log 
+// → Fetch & Process → Update Database → Return Results
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import dbConnect from '../../../../lib/mongodb';
