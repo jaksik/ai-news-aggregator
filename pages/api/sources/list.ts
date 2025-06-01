@@ -1,3 +1,5 @@
+//queries the articles collection to get a list of unique source names
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '../../../lib/mongodb';
 import Article from '../../../models/Article';

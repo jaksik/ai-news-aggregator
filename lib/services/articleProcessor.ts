@@ -1,3 +1,10 @@
+// Purpose: Acts as the final processing step in the news aggregation pipeline, ensuring that:
+
+// Articles are properly formatted before database storage
+// No duplicate articles are saved
+// Both RSS and HTML content sources are handled consistently
+// The database maintains clean, deduplicated article data
+
 import Article, { IArticle } from '../../models/Article';
 
 export interface ProcessedArticleResult {

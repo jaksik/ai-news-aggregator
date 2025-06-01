@@ -1,4 +1,16 @@
 // File: pages/api/sources/fetch.ts
+// Purpose: Serves as the main entry point for automated news aggregation, 
+// allowing both scheduled cron jobs and manual admin triggers to fetch articles 
+// from all enabled news sources at once.
+
+// Flow: Cron/Manual Trigger → Validate Authorization → Process All Sources 
+// → Return Aggregate Results
+
+// Use Cases:
+// Scheduled automated news gathering
+// Manual "Fetch All" admin operations
+// Bulk content updates
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '../../../lib/mongodb';
 import { processAllEnabledSources, OverallFetchRunResult } from '../../../lib/services/fetcher';

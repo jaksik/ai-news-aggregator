@@ -1,4 +1,15 @@
 // File: pages/api/articles/[articleId]/index.ts
+// Purpose: Provides CRUD operations for individual articles, allowing the frontend interface to:
+// Hide/show articles: Toggle article visibility without deletion
+// Delete articles: Remove unwanted or inappropriate content
+// Content moderation: Manage article visibility for users
+// Flow: Frontend Request → Validate Article ID → Update/Delete Article → Return Results
+
+// Use Cases:
+// Content moderation (hiding inappropriate articles)
+// Admin article management
+// User-driven content filtering
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import dbConnect from '../../../../lib/mongodb';
