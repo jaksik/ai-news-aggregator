@@ -5,19 +5,25 @@ import dbConnect from '../../mongodb';
 import Source, { ISource } from '../../../models/Source';
 import { createSuccessResponse, createErrorResponse } from '../utils';
 import { RequestHandler } from '../types';
-import { fetchParseAndStoreSource, SourceToFetch } from '../../services/fetcher';
+import { processSingleSource, ProcessingSummary } from '../../services/fetcher';
 
 export interface SourcesListQuery {
   type?: string;
   isEnabled?: string;
-  page?: string;
-  limit?: string;
   sortBy?: string;
   sortOrder?: string;
 }
 
+export interface ScrapeSourceResult extends ProcessingSummary {
+  sourceId: string;
+  sourceName: string;
+  success: boolean;
+  duration: number;
+  logId?: string;
+}
+
 /**
- * List all sources with filtering and pagination
+ * List all sources with basic filtering
  */
 export const listSources: RequestHandler<ISource[]> = async (req, res) => {
   await dbConnect();
@@ -25,8 +31,6 @@ export const listSources: RequestHandler<ISource[]> = async (req, res) => {
   const {
     type,
     isEnabled,
-    page = '1',
-    limit = '10',
     sortBy = 'createdAt',
     sortOrder = 'desc'
   } = req.query as SourcesListQuery;
@@ -49,43 +53,14 @@ export const listSources: RequestHandler<ISource[]> = async (req, res) => {
   const sortDirection = sortOrder === 'asc' ? 1 : -1;
   sortQuery[sortField as string] = sortDirection;
 
-  // Parse pagination
-  const limitNum = Math.max(1, parseInt(limit as string) || 10);
-  const pageNum = Math.max(1, parseInt(page as string) || 1);
-  const skip = (pageNum - 1) * limitNum;
+  // Get all sources (no pagination)
+  const sources = await Source.find(filter)
+    .sort(sortQuery)
+    .lean();
 
-  // Execute query
-  const [sources, total] = await Promise.all([
-    Source.find(filter)
-      .sort(sortQuery)
-      .skip(skip)
-      .limit(limitNum)
-      .lean(),
-    Source.countDocuments(filter)
-  ]);
-
-  const totalPages = Math.ceil(total / limitNum);
-
-  const response = createSuccessResponse(
-    sources as ISource[],
-    'Sources retrieved successfully',
-    {
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total,
-        totalPages,
-        hasNext: pageNum < totalPages,
-        hasPrev: pageNum > 1
-      },
-      filters: {
-        type,
-        isEnabled: isEnabled ? isEnabled === 'true' : undefined
-      }
-    }
+  res.status(200).json(
+    createSuccessResponse(sources as ISource[], 'Sources retrieved successfully')
   );
-
-  res.status(200).json(response);
 };
 
 /**
@@ -279,122 +254,10 @@ export const deleteSource: RequestHandler<{ success: boolean }> = async (req, re
   );
 };
 
-export interface ScrapeResult {
-  sourceId: string;
-  sourceName: string;
-  success: boolean;
-  articlesProcessed?: number;
-  error?: string;
-  duration?: number;
-}
-
-export interface BatchScrapeResult {
-  totalSources: number;
-  successfulSources: number;
-  failedSources: number;
-  results: ScrapeResult[];
-  totalArticlesProcessed: number;
-  duration: number;
-}
-
-/**
- * Scrape articles from all enabled sources
- */
-export const scrapeAllSources: RequestHandler<BatchScrapeResult> = async (req, res) => {
-  await dbConnect();
-
-  const startTime = Date.now();
-  const results: ScrapeResult[] = [];
-  let totalArticlesProcessed = 0;
-
-  try {
-    // Get all enabled sources
-    const sources = await Source.find({ isEnabled: true }).lean();
-
-    if (sources.length === 0) {
-      return res.status(200).json(
-        createSuccessResponse({
-          totalSources: 0,
-          successfulSources: 0,
-          failedSources: 0,
-          results: [],
-          totalArticlesProcessed: 0,
-          duration: Date.now() - startTime
-        }, 'No enabled sources found')
-      );
-    }
-
-    // Process each source
-    for (const source of sources) {
-      const sourceStartTime = Date.now();
-      let result: ScrapeResult = {
-        sourceId: source._id.toString(),
-        sourceName: source.name,
-        success: false
-      };
-
-      try {
-        let articlesProcessed = 0;
-
-        // Create SourceToFetch object
-        const sourceToFetch: SourceToFetch = {
-          name: source.name,
-          url: source.url,
-          type: source.type,
-          scrapingConfig: source.scrapingConfig,
-        };
-
-        // Use the centralized fetcher function
-        const fetchResult = await fetchParseAndStoreSource(sourceToFetch);
-        articlesProcessed = fetchResult.newItemsAdded;
-
-        result = {
-          ...result,
-          success: true,
-          articlesProcessed,
-          duration: Date.now() - sourceStartTime
-        };
-
-        totalArticlesProcessed += articlesProcessed;
-      } catch (error) {
-        console.error(`Error processing source ${source.name}:`, error);
-        result = {
-          ...result,
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          duration: Date.now() - sourceStartTime
-        };
-      }
-
-      results.push(result);
-    }
-
-    const successfulSources = results.filter(r => r.success).length;
-    const failedSources = results.filter(r => !r.success).length;
-
-    const batchResult: BatchScrapeResult = {
-      totalSources: sources.length,
-      successfulSources,
-      failedSources,
-      results,
-      totalArticlesProcessed,
-      duration: Date.now() - startTime
-    };
-
-    res.status(200).json(
-      createSuccessResponse(batchResult, 'Batch scrape completed')
-    );
-
-  } catch (error) {
-    console.error('Error in batch scrape:', error);
-    throw error;
-  }
-};
-
 /**
  * Scrape articles from a specific source
  */
-export const scrapeSource: RequestHandler<ScrapeResult> = async (req, res) => {
+export const scrapeSource: RequestHandler<ScrapeSourceResult> = async (req, res) => {
   await dbConnect();
 
   // Check both query and body for sourceId (support both GET and POST)
@@ -406,57 +269,40 @@ export const scrapeSource: RequestHandler<ScrapeResult> = async (req, res) => {
     );
   }
 
-  const startTime = Date.now();
-
   try {
-    // Get the source
-    const source = await Source.findById(sourceId).lean();
+    // Use the centralized fetcher service for single source processing
+    const result = await processSingleSource(sourceId);
 
-    if (!source) {
-      return res.status(404).json(
-        createErrorResponse('Source not found')
+    if (result.success) {
+      res.status(200).json(
+        createSuccessResponse(result, 'Source scrape completed successfully')
+      );
+    } else {
+      res.status(500).json(
+        createSuccessResponse(result, 'Source scrape failed')
       );
     }
-
-    if (!source.isEnabled) {
-      return res.status(400).json(
-        createErrorResponse('Source is disabled')
-      );
-    }
-
-    // Create SourceToFetch object
-    const sourceToFetch: SourceToFetch = {
-      name: source.name,
-      url: source.url,
-      type: source.type,
-      scrapingConfig: source.scrapingConfig,
-    };
-
-    // Use the centralized fetcher function
-    const fetchResult = await fetchParseAndStoreSource(sourceToFetch);
-    const articlesProcessed = fetchResult.newItemsAdded;
-
-    const result: ScrapeResult = {
-      sourceId,
-      sourceName: source.name,
-      success: true,
-      articlesProcessed,
-      duration: Date.now() - startTime
-    };
-
-    res.status(200).json(
-      createSuccessResponse(result, 'Source scrape completed successfully')
-    );
 
   } catch (error) {
     console.error(`Error scraping source ${sourceId}:`, error);
     
-    const result: ScrapeResult = {
+    const result = {
       sourceId,
       sourceName: 'Unknown',
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      duration: Date.now() - startTime
+      duration: 0,
+      // Include empty ProcessingSummary-like fields for consistency
+      sourceUrl: '',
+      type: 'html' as const,
+      status: 'failed' as const,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      itemsFound: 0,
+      itemsConsidered: 0,
+      itemsProcessed: 0,
+      newItemsAdded: 0,
+      itemsSkipped: 0,
+      errors: [],
+      fetchError: error instanceof Error ? error.message : 'Unknown error'
     };
 
     res.status(500).json(
