@@ -159,6 +159,16 @@ const SourcesPage: React.FC = () => {
     setIsSubmittingAction(sourceId);
     setActionError(null);
 
+    // Optimistically update the UI immediately
+    setSources(prevSources => 
+      prevSources.map(source => {
+        if (source._id?.toString() === sourceId) {
+          source.isEnabled = !currentIsEnabled;
+        }
+        return source;
+      })
+    );
+
     try {
       const response = await fetch(`/api/sources/${sourceId}`, {
         method: 'PUT',
@@ -169,8 +179,11 @@ const SourcesPage: React.FC = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to toggle source');
 
-      await fetchSources();
+      // Optimistic update was successful, no need to refetch
     } catch (error: unknown) {
+      // Revert the optimistic update on error
+      await fetchSources(); // Only refetch on error to restore original state
+      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setActionError(`Toggle failed: ${errorMessage}`);
     } finally {
@@ -212,6 +225,37 @@ const SourcesPage: React.FC = () => {
       setActionError(`Scrape failed: ${errorMessage}`);
     } finally {
       setIsSubmittingAction(null);
+    }
+  };
+
+  const handleClearError = async (sourceId: string) => {
+    setActionError(null);
+    
+    // Optimistically update the UI immediately
+    setSources(prevSources => 
+      prevSources.map(source => {
+        if (source._id?.toString() === sourceId) {
+          source.lastError = undefined;
+        }
+        return source;
+      })
+    );
+    
+    try {
+      const response = await fetch(`/api/sources/${sourceId}/clear-error`, {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to clear error');
+      
+      // Optimistic update was successful, no need to refetch
+    } catch (error: unknown) {
+      // Revert the optimistic update on error
+      await fetchSources(); // Only refetch on error to restore original state
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setActionError(`Failed to clear error: ${errorMessage}`);
     }
   };
 
@@ -438,11 +482,21 @@ const SourcesPage: React.FC = () => {
 
                           <div className="px-5">
                             {source.lastError && (
-                              <>
-                                <span className="text-red-600 truncate text-xs" title={source.lastError}>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-red-600 truncate text-xs flex-1" title={source.lastError}>
                                   {source.lastError}
                                 </span>
-                              </>
+                                <button
+                                  onClick={() => handleClearError(source._id!.toString())}
+                                  disabled={isSubmittingAction === source._id?.toString()}
+                                  className="text-red-400 hover:text-red-600 disabled:opacity-50 flex-shrink-0"
+                                  title="Clear error"
+                                >
+                                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
                             )}
                           </div>
                           <div className="flex items-center space-x-2">

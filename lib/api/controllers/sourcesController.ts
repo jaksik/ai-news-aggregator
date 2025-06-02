@@ -311,4 +311,40 @@ export const scrapeSource: RequestHandler<ScrapeSourceResult> = async (req, res)
   }
 };
 
+/**
+ * Clear error from a source
+ */
+export const clearSourceError: RequestHandler<ISource> = async (req, res) => {
+  await dbConnect();
+
+  const { sourceId } = req.query;
+
+  if (!sourceId || typeof sourceId !== 'string') {
+    return res.status(400).json(
+      createErrorResponse('Source ID is required')
+    );
+  }
+
+  try {
+    const source = await Source.findByIdAndUpdate(
+      sourceId,
+      { $unset: { lastError: 1 } }, // Remove the lastError field
+      { new: true, lean: true }
+    );
+
+    if (!source) {
+      return res.status(404).json(
+        createErrorResponse('Source not found')
+      );
+    }
+
+    res.status(200).json(
+      createSuccessResponse(source as ISource, 'Source error cleared successfully')
+    );
+  } catch (error) {
+    console.error('Error clearing source error:', error);
+    throw error;
+  }
+};
+
 
