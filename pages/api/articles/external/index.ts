@@ -2,41 +2,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import dbConnect from '../../../../lib/mongodb';
 import Article, { IArticle } from '../../../../models/Article';
+import { withHandler } from '../../../../lib/api/middleware';
+import { 
+  createValidationError, 
+  ConflictError, 
+  createDatabaseError 
+} from '../../../../lib/errors/errorHandler';
+import { ApiResponse } from '../../../../lib/api/types';
 
-type ResponseData = {
-  article?: IArticle;
-  message?: string;
-  error?: string;
-  errors?: Record<string, unknown>;
-}
+type ArticleData = {
+  article: IArticle;
+  message: string;
+};
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ResponseData>
-) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
-
+  res: NextApiResponse<ApiResponse<ArticleData>>
+): Promise<void> {
   try {
     await dbConnect();
   } catch (error: unknown) {
-    console.error('API /api/articles/external - DB Connection Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Database connection failed';
-    return res.status(500).json({ error: 'Database connection failed', message: errorMessage });
+    throw createDatabaseError('Database connection failed', {}, error);
+  }
+
+  const { title, link, sourceName, publishedDate, descriptionSnippet, guid } = req.body;
+
+  // Validate required fields
+  if (!title || !link || !sourceName) {
+    throw createValidationError('Missing required fields: title, link, and sourceName are required.');
   }
 
   try {
-    const { title, link, sourceName, publishedDate, descriptionSnippet, guid } = req.body;
-
-    // Validate required fields
-    if (!title || !link || !sourceName) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: title, link, and sourceName are required.' 
-      });
-    }
-
     // Check if article already exists
     let existingArticle: IArticle | null = null;
     if (guid) {
@@ -47,10 +43,7 @@ export default async function handler(
     }
 
     if (existingArticle) {
-      return res.status(409).json({ 
-        error: 'Article already exists', 
-        message: 'An article with this link or GUID already exists in the database.' 
-      });
+      throw new ConflictError('Article already exists');
     }
 
     // Create new article
@@ -68,24 +61,35 @@ export default async function handler(
     });
 
     const savedArticle = await newArticle.save();
-    return res.status(201).json({ 
-      message: 'Article submitted successfully', 
-      article: savedArticle 
+    
+    res.status(201).json({
+      success: true,
+      data: {
+        article: savedArticle,
+        message: 'Article submitted successfully'
+      },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
     });
 
   } catch (error: unknown) {
-    console.error('API /api/articles/external POST Error:', error);
-    
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ValidationError') {
       const validationError = error as unknown as { message: string; errors: Record<string, unknown> };
-      return res.status(400).json({ 
-        error: 'Validation failed', 
-        message: validationError.message, 
-        errors: validationError.errors 
-      });
+      throw createValidationError(validationError.message, validationError.errors);
     }
-
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return res.status(500).json({ error: 'Failed to submit article', message: errorMessage });
+    
+    throw createDatabaseError('Failed to submit article', {}, error);
   }
 }
+
+export default withHandler(async (
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<ArticleData>>
+) => {
+  if (req.method !== 'POST') {
+    throw createValidationError('Method not allowed');
+  }
+
+  await handler(req, res);
+});

@@ -19,8 +19,11 @@ interface Tool {
 }
 
 interface ToolsResponse {
-  tools: Tool[];
-  count: number;
+  success: boolean;
+  data: {
+    tools: Tool[];
+    total: number;
+  };
   error?: string;
 }
 
@@ -41,7 +44,7 @@ const ToolsIndexPage: React.FC = () => {
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
       const data: ToolsResponse = await response.json();
-      setTools(data.tools);
+      setTools(data.data.tools);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -142,11 +145,11 @@ const ToolsIndexPage: React.FC = () => {
             </div>
           )}
 
-          {!loading && !error && tools.length === 0 && (
+          {!loading && !error && tools && tools.length === 0 && (
             <EmptyToolsState />
           )}
 
-          {!loading && !error && tools.length > 0 && (
+          {!loading && !error && tools && tools.length > 0 && (
             <ToolsGrid 
               tools={tools}
               onEditTool={handleEditTool}

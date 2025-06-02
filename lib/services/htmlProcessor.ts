@@ -11,6 +11,7 @@
 import { ArticleProcessor } from './articleProcessor';
 import { ScraperSelector } from './scraperSelector';
 import { ConfigurationManager, SourceConfiguration } from './configurationManager';
+import { ProcessingStatusManager } from './processingStatusManager';
 import { ProcessingSummary, SourceToFetch } from './fetcher';
 import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
 import { EnhancedHTMLScraper } from '../scrapers/puppeteerScraper';
@@ -67,10 +68,12 @@ export class HTMLProcessor {
             }
 
             // Set final status and message
-            this.setProcessingSummaryStatus(summary);
+            ProcessingStatusManager.setProcessingStatus(summary, {
+                sourceType: 'html'
+            });
 
         } catch (error: unknown) {
-            this.handleProcessingError(error, summary);
+            ProcessingStatusManager.handleProcessingError(error, summary, 'html');
         } finally {
             // Always cleanup scraper resources
             if (scraper) {
@@ -131,7 +134,7 @@ export class HTMLProcessor {
         for (const scrapedArticle of scrapedArticles) {
             summary.itemsProcessed++;
             
-            const result = await ArticleProcessor.processHTMLArticle(scrapedArticle, sourceName);
+            const result = await ArticleProcessor.processArticle(scrapedArticle, sourceName, 'html');
             
             if (result.action === 'added') {
                 summary.newItemsAdded++;
@@ -150,24 +153,6 @@ export class HTMLProcessor {
     }
 
     /**
-     * Set final processing status and message
-     */
-    private static setProcessingSummaryStatus(summary: ProcessingSummary): void {
-        const processedStatsMessage = `Processed ${summary.itemsProcessed} articles. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
-
-        if (summary.errors.length > 0) {
-            summary.status = 'partial_success';
-            summary.message = `Completed with ${summary.errors.length} errors. ${processedStatsMessage}`;
-        } else if (summary.itemsConsidered === 0) {
-            summary.status = 'success';
-            summary.message = "No articles found on website.";
-        } else {
-            summary.status = 'success';
-            summary.message = `Successfully ${processedStatsMessage}`;
-        }
-    }
-
-    /**
      * Cleanup scraper resources
      */
     private static async cleanupScraper(scraper: HTMLScraper | EnhancedHTMLScraper): Promise<void> {
@@ -177,18 +162,5 @@ export class HTMLProcessor {
             console.error('HTML Processor: Error cleaning up scraper:', error);
             // Don't throw here - we don't want cleanup errors to affect the main processing
         }
-    }
-
-    /**
-     * Handle processing errors
-     */
-    private static handleProcessingError(error: unknown, summary: ProcessingSummary): void {
-        let message = 'Failed to process HTML source.';
-        if (error instanceof Error) {
-            message = `Failed to process HTML source: ${error.message}`;
-        }
-        summary.fetchError = (error instanceof Error) ? error.message : String(error);
-        summary.message = message;
-        summary.status = 'failed';
     }
 }

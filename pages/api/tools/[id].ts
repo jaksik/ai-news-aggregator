@@ -2,107 +2,170 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mongoose from 'mongoose';
 import dbConnect from '../../../lib/mongodb';
-import Tool, { ITool } from '../../../models/Tool';
+import Tool, { ITool, IToolDocument } from '../../../models/Tool';
+import { createMethodHandler } from '../../../lib/api/routeHandlerFactory';
+import { 
+  createValidationError,
+  createNotFoundError,
+  createDatabaseError
+} from '../../../lib/errors/errorHandler';
+import { ApiResponse } from '../../../lib/api/types';
 
-type ResponseData = {
-  tool?: ITool;
+// Helper function to convert Mongoose document to plain object
+function toPlainObject(doc: IToolDocument): ITool {
+  return {
+    _id: (doc._id as mongoose.Types.ObjectId).toString(),
+    name: doc.name,
+    category: doc.category,
+    subcategory: doc.subcategory,
+    url: doc.url,
+    logoUrl: doc.logoUrl,
+    description: doc.description,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+}
+
+type ToolData = {
+  tool: ITool;
   message?: string;
-  error?: string;
 };
 
-export default async function handler(
+export default createMethodHandler({
+  GET: getTool,
+  PUT: updateTool,
+  DELETE: deleteTool
+});
+
+// GET tool by ID
+async function getTool(
   req: NextApiRequest,
-  res: NextApiResponse<ResponseData>
-) {
+  res: NextApiResponse<ApiResponse<ToolData>>
+): Promise<void> {
+  await dbConnect();
+  
+  const { id } = req.query;
+  
+  if (!id || typeof id !== 'string') {
+    throw createValidationError('Tool ID is required');
+  }
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createValidationError('Invalid tool ID format');
+  }
+
   try {
-    await dbConnect();
+    const tool = await Tool.findById(id);
     
-    const { id } = req.query;
+    if (!tool) {
+      throw createNotFoundError('Tool');
+    }
     
-    if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'Tool ID is required' });
-    }
-
-    // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid tool ID format' });
-    }
-
-    switch (req.method) {
-      case 'GET':
-        try {
-          const tool = await Tool.findById(id);
-          
-          if (!tool) {
-            return res.status(404).json({ error: 'Tool not found' });
-          }
-          
-          return res.status(200).json({ tool });
-        } catch (error) {
-          console.error('Error fetching tool:', error);
-          return res.status(500).json({ error: 'Failed to fetch tool' });
-        }
-
-      case 'PUT':
-        try {
-          const { name, description, url, category, logoUrl } = req.body;
-          
-          if (!name || !description || !url) {
-            return res.status(400).json({ 
-              error: 'Name, description, and URL are required' 
-            });
-          }
-
-          const updatedTool = await Tool.findByIdAndUpdate(
-            id,
-            {
-              name: name.trim(),
-              description: description.trim(),
-              url: url.trim(),
-              category: category?.trim() || 'Other',
-              logoUrl: logoUrl?.trim() || '',
-              updatedAt: new Date()
-            },
-            { new: true, runValidators: true }
-          );
-
-          if (!updatedTool) {
-            return res.status(404).json({ error: 'Tool not found' });
-          }
-
-          return res.status(200).json({ 
-            tool: updatedTool, 
-            message: 'Tool updated successfully' 
-          });
-        } catch (error) {
-          console.error('Error updating tool:', error);
-          return res.status(500).json({ error: 'Failed to update tool' });
-        }
-
-      case 'DELETE':
-        try {
-          const deletedTool = await Tool.findByIdAndDelete(id);
-          
-          if (!deletedTool) {
-            return res.status(404).json({ error: 'Tool not found' });
-          }
-          
-          return res.status(200).json({ 
-            message: 'Tool deleted successfully' 
-          });
-        } catch (error) {
-          console.error('Error deleting tool:', error);
-          return res.status(500).json({ error: 'Failed to delete tool' });
-        }
-
-      default:
-        res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
-        return res.status(405).json({ 
-          error: `Method ${req.method} not allowed` 
-        });
-    }
+    res.status(200).json({
+      success: true,
+      data: { tool: toPlainObject(tool) },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
+    });
   } catch (error) {
-    console.error('Database connection error:', error);
-    return res.status(500).json({ error: 'Database connection failed' });
+    throw createDatabaseError('Failed to fetch tool', {}, error);
+  }
+}
+
+// PUT update tool
+async function updateTool(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<ToolData>>
+): Promise<void> {
+  await dbConnect();
+  
+  const { id } = req.query;
+  
+  if (!id || typeof id !== 'string') {
+    throw createValidationError('Tool ID is required');
+  }
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createValidationError('Invalid tool ID format');
+  }
+
+  const { name, description, url, category, logoUrl } = req.body;
+  
+  if (!name || !description || !url) {
+    throw createValidationError('Name, description, and URL are required');
+  }
+
+  try {
+    const updatedTool = await Tool.findByIdAndUpdate(
+      id,
+      {
+        name: name.trim(),
+        description: description.trim(),
+        url: url.trim(),
+        category: category?.trim() || 'Other',
+        logoUrl: logoUrl?.trim() || '',
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedTool) {
+      throw createNotFoundError('Tool');
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { 
+        tool: toPlainObject(updatedTool), 
+        message: 'Tool updated successfully' 
+      },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    throw createDatabaseError('Failed to update tool', {}, error);
+  }
+}
+
+// DELETE tool
+async function deleteTool(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<{ message: string }>>
+): Promise<void> {
+  await dbConnect();
+  
+  const { id } = req.query;
+  
+  if (!id || typeof id !== 'string') {
+    throw createValidationError('Tool ID is required');
+  }
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createValidationError('Invalid tool ID format');
+  }
+
+  try {
+    const deletedTool = await Tool.findByIdAndDelete(id);
+    
+    if (!deletedTool) {
+      throw createNotFoundError('Tool');
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: { 
+        message: 'Tool deleted successfully' 
+      },
+      meta: {
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    throw createDatabaseError('Failed to delete tool', {}, error);
   }
 }

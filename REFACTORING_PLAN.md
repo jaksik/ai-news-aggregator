@@ -51,13 +51,13 @@ interface ApiResponse<T> {
 }
 ```
 
-### Phase 2: Service Layer Consolidation (Week 2-3)
+### Phase 2: Service Layer Consolidation (Week 2-3) ✅ **COMPLETED**
 **Priority: HIGH** - Eliminates major code duplication
 
-#### 2.1 Unify Article Processing
+#### 2.1 Unify Article Processing ✅ **COMPLETED**
 **Target Files:**
-- `lib/services/articleProcessor.ts` - Consolidate RSS/HTML processing
-- Create: `lib/services/baseProcessor.ts` - Abstract base class
+- ✅ `lib/services/articleProcessor.ts` - Consolidate RSS/HTML processing
+- ✅ Create: `lib/services/baseProcessor.ts` - Abstract base class
 
 **Current Duplication:**
 ```typescript
@@ -78,11 +78,11 @@ class ArticleProcessor {
 }
 ```
 
-#### 2.2 Create Processing Status Utility
+#### 2.2 Create Processing Status Utility ✅ **COMPLETED**
 **Target Files:**
-- Create: `lib/services/processingStatusManager.ts`
-- Update: `lib/services/htmlProcessor.ts`
-- Update: `lib/services/rssProcessor.ts`
+- ✅ Create: `lib/services/processingStatusManager.ts`
+- ✅ Update: `lib/services/htmlProcessor.ts`
+- ✅ Update: `lib/services/rssProcessor.ts`
 
 **Current Issues:** Status determination logic duplicated across processors
 
@@ -228,10 +228,10 @@ export default createMethodHandler<ISource>({
 ## 📋 Task Tracking
 
 ### Phase 1 Tasks:
-- [ ] Create `lib/api/types.ts` 
-- [ ] Create `lib/api/middleware.ts`
-- [ ] Create `lib/api/handlers.ts`
-- [ ] Create `lib/api/utils.ts`
+- [x] Create `lib/api/types.ts` 
+- [x] Create `lib/api/middleware.ts`
+- [x] Create `lib/api/handlers.ts`
+- [x] Create `lib/api/utils.ts`
 - [ ] Test infrastructure with one endpoint
 
 ### Phase 2 Tasks:
@@ -245,8 +245,8 @@ export default createMethodHandler<ISource>({
 - [ ] Design new API structure
 - [ ] Migrate `/api/sources/` endpoints
 - [ ] Migrate `/api/articles/` endpoints  
-- [ ] Remove deprecated `/api/sources/list`
-- [ ] Update frontend API calls
+- [x] Remove deprecated `/api/sources/list`
+- [x] Update frontend API calls
 
 ### Phase 4 Tasks:
 - [ ] Create `AppConfig` class
@@ -313,3 +313,44 @@ To begin the refactoring process:
 5. **Gather feedback** and adjust approach if needed
 
 Remember: This is a living document. Update it as we learn and adapt during the refactoring process.
+
+pages/api/
+├── sources/
+│   ├── index.ts              # GET, POST, PUT, DELETE /api/sources
+│   ├── fetch.ts              # POST /api/sources/fetch
+│   ├── validate.ts           # POST /api/sources/validate  
+│   ├── enable.ts             # POST /api/sources/enable
+│   ├── disable.ts            # POST /api/sources/disable
+│   └── [id]/
+│       ├── index.ts          # GET, PUT, DELETE /api/sources/[id]
+│       ├── fetch.ts          # POST /api/sources/[id]/fetch
+│       ├── validate.ts       # POST /api/sources/[id]/validate
+│       ├── enable.ts         # POST /api/sources/[id]/enable
+│       ├── disable.ts        # POST /api/sources/[id]/disable
+│       └── test.ts           # POST /api/sources/[id]/test
+├── articles/
+│   ├── index.ts              # GET, POST, PUT, DELETE /api/articles
+│   ├── hide.ts               # POST /api/articles/hide
+│   ├── show.ts               # POST /api/articles/show
+│   ├── star.ts               # POST /api/articles/star
+│   ├── unstar.ts             # POST /api/articles/unstar
+│   ├── mark-read.ts          # POST /api/articles/mark-read
+│   ├── mark-unread.ts        # POST /api/articles/mark-unread
+│   └── [id]/
+│       └── index.ts          # GET, PUT, DELETE /api/articles/[id]
+├── analytics/
+│   ├── sources.ts            # GET /api/analytics/sources
+│   ├── articles.ts           # GET /api/analytics/articles
+│   ├── fetch-history.ts      # GET /api/analytics/fetch-history
+│   └── dashboard.ts          # GET /api/analytics/dashboard
+├── reports/
+│   ├── daily.ts              # GET /api/reports/daily
+│   ├── sources.ts            # GET /api/reports/sources
+│   └── errors.ts             # GET /api/reports/errors
+├── logs/
+│   ├── fetch-runs.ts         # GET /api/logs/fetch-runs
+│   ├── errors.ts             # GET /api/logs/errors
+│   └── system.ts             # GET /api/logs/system
+├── config.ts                 # GET, PUT /api/config
+├── health.ts                 # GET /api/health
+└── status.ts                 # GET /api/status

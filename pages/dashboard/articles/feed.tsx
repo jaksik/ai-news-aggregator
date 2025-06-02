@@ -7,10 +7,15 @@ import AuthWrapper from '../../../components/auth/AuthWrapper';
 import { IArticle } from '../../../models/Article';
 
 interface FetchArticlesApiResponse {
-  articles?: IArticle[];
-  total?: number;
-  error?: string;
+  success: boolean;
+  data?: IArticle[];
   message?: string;
+  meta?: {
+    pagination?: {
+      total?: number;
+    };
+  };
+  error?: string;
 }
 
 const MainDashboardPage: React.FC = () => {
@@ -26,6 +31,7 @@ const MainDashboardPage: React.FC = () => {
     sortBy: 'publishedDate',
     sortOrder: 'desc',
     includeHidden: false,
+    search: '',
   });
 
   // Build query string from filters
@@ -36,6 +42,7 @@ const MainDashboardPage: React.FC = () => {
     if (filters.startDate) params.append('startDate', filters.startDate);
     if (filters.endDate) params.append('endDate', filters.endDate);
     if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search && filters.search.trim()) params.append('search', filters.search.trim());
     params.append('sortBy', filters.sortBy);
     params.append('sortOrder', filters.sortOrder);
     params.append('includeHidden', filters.includeHidden.toString());
@@ -57,8 +64,8 @@ const MainDashboardPage: React.FC = () => {
       }
       
       const data: FetchArticlesApiResponse = await response.json();
-      setArticles(data.articles || []);
-      setTotal(data.total || 0);
+      setArticles(data.data || []);
+      setTotal(data.meta?.pagination?.total || 0);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -86,6 +93,7 @@ const MainDashboardPage: React.FC = () => {
       sortBy: 'publishedDate',
       sortOrder: 'desc',
       includeHidden: false,
+      search: '',
     };
     setCurrentFilters(defaultFilters);
     fetchArticles(defaultFilters);
@@ -183,7 +191,6 @@ const MainDashboardPage: React.FC = () => {
         <ArticleFilters
           onApplyFilters={handleApplyFilters}
           onResetFilters={handleResetFilters}
-          loading={loading}
           initialFilters={currentFilters}
         />
 

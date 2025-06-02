@@ -11,6 +11,7 @@
 import Parser from 'rss-parser';
 import { ArticleProcessor } from './articleProcessor';
 import { ConfigurationManager, SourceConfiguration } from './configurationManager';
+import { ProcessingStatusManager } from './processingStatusManager';
 import { ProcessingSummary, SourceToFetch } from './fetcher';
 
 export class RSSProcessor {
@@ -61,10 +62,13 @@ export class RSSProcessor {
             }
 
             // Set final status and message
-            this.setProcessingSummaryStatus(summary, config.maxArticles);
+            ProcessingStatusManager.setProcessingStatus(summary, {
+                maxArticles: config.maxArticles,
+                sourceType: 'rss'
+            });
 
         } catch (error: unknown) {
-            this.handleProcessingError(error, summary);
+            ProcessingStatusManager.handleProcessingError(error, summary, 'rss');
         }
 
         return summary;
@@ -119,7 +123,7 @@ export class RSSProcessor {
         for (const item of items) {
             summary.itemsProcessed++;
             
-            const result = await ArticleProcessor.processRSSArticle(item, sourceName);
+            const result = await ArticleProcessor.processArticle(item, sourceName, 'rss');
             
             if (result.action === 'added') {
                 summary.newItemsAdded++;
@@ -135,46 +139,5 @@ export class RSSProcessor {
                 }
             }
         }
-    }
-
-    /**
-     * Set final processing status and message
-     */
-    private static setProcessingSummaryStatus(
-        summary: ProcessingSummary,
-        maxArticles: number | undefined
-    ): void {
-        const limitMessagePart = maxArticles && summary.itemsFound > maxArticles 
-            ? ` (limited to first ${summary.itemsConsidered} of ${summary.itemsFound} found).`
-            : '';
-
-        const processedStatsMessage = `Processed ${summary.itemsProcessed} items${limitMessagePart}. Added: ${summary.newItemsAdded}, Skipped: ${summary.itemsSkipped}.`;
-
-        if (summary.errors.length > 0) {
-            summary.status = 'partial_success';
-            summary.message = `Completed with ${summary.errors.length} errors. ${processedStatsMessage}`;
-        } else if (summary.itemsConsidered === 0 && summary.itemsFound === 0) {
-            summary.status = 'success';
-            summary.message = "No items found in RSS feed.";
-        } else if (summary.itemsConsidered === 0 && summary.itemsFound > 0) {
-            summary.status = 'success';
-            summary.message = `Found ${summary.itemsFound} items, but 0 considered after limit (or limit was 0). No items processed.`;
-        } else {
-            summary.status = 'success';
-            summary.message = `Successfully ${processedStatsMessage}`;
-        }
-    }
-
-    /**
-     * Handle processing errors
-     */
-    private static handleProcessingError(error: unknown, summary: ProcessingSummary): void {
-        let message = 'Failed to process RSS source.';
-        if (error instanceof Error) {
-            message = `Failed to process RSS source: ${error.message}`;
-        }
-        summary.fetchError = (error instanceof Error) ? error.message : String(error);
-        summary.message = message;
-        summary.status = 'failed';
     }
 }
