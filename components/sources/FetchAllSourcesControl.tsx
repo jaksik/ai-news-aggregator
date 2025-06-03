@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 // We'll need the OverallFetchRunResult interface to type the API response
-import { OverallFetchRunResult } from '../../lib/services/fetcher';
+import { OverallFetchRunResult } from '../../lib/types';
 import Link from 'next/link';
 
 const FetchAllSourcesControl: React.FC = () => {

@@ -2,7 +2,7 @@
 // Purpose: Validate source configuration and connectivity
 
 import { createMethodHandler } from '../../../../lib/api/routeHandlerFactory';
-import dbConnect from '../../../../lib/mongodb';
+import dbConnect from '../../../../lib/db';
 import Source from '../../../../models/Source';
 import { createSuccessResponse, createErrorResponse } from '../../../../lib/api/utils';
 import { RequestHandler } from '../../../../lib/api/types';

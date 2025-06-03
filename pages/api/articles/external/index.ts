@@ -1,6 +1,6 @@
 // File: pages/api/articles/external/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../../../lib/mongodb';
+import dbConnect from '../../../../lib/db';
 import Article, { IArticle } from '../../../../models/Article';
 import { withHandler } from '../../../../lib/api/middleware';
 import { 

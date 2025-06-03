@@ -2,7 +2,7 @@
 // Purpose: Controller for fetch logs and analytics
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../mongodb';
+import dbConnect from '../../db';
 import FetchRunLog, { IFetchRunLog } from '../../../models/FetchRunLog';
 import { ApiResponse } from '../types';
 

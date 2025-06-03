@@ -6,7 +6,7 @@
  * RSSProcessor and HTMLProcessor services.
  */
 
-import { ProcessingSummary } from './fetcher';
+import { ProcessingSummary } from './types';
 
 export interface StatusOptions {
   maxArticles?: number;

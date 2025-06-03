@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../../components/auth/AuthWrapper';
-import { ISource } from '../../../models/Source';
+import { ISource } from '../../../lib/types';
 import AddSourceModal from '../../../components/sources/AddSourceModal';
 import EditSourceModal from '../../../components/sources/EditSourceModal';
 

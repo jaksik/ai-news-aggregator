@@ -4,7 +4,7 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../mongodb';
+import dbConnect from '../db';
 import { ApiResponse } from './types';
 import { generateRequestId } from './utils';
 import { ErrorHandler, SystemError, AuthenticationError } from '../errors/errorHandler';
@@ -66,8 +66,9 @@ export function withAuth(
   handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
 ) {
   return withHandler(async (req: NextApiRequest, res: NextApiResponse) => {
-    const expectedSecret = process.env.CRON_SECRET;
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const { auth, config } = await import('../config');
+    const expectedSecret = auth.cronSecret;
+    const isDevelopment = config.isDevelopment;
     
     // Skip auth in development mode
     if (isDevelopment) {

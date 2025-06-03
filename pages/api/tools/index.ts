@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import dbConnect from '../../../lib/mongodb';
+import dbConnect from '../../../lib/db';
 import Tool, { ITool, IToolDocument } from '../../../models/Tool';
 import { createMethodHandler } from '../../../lib/api/routeHandlerFactory';
 import { 

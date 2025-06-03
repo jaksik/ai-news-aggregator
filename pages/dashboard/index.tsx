@@ -3,7 +3,7 @@ import Link from 'next/link';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../components/auth/AuthWrapper';
 import FetchAllSourcesControl from '../../components/sources/FetchAllSourcesControl';
-import { ISource } from '../../models/Source';
+import { ISource } from '../../lib/types';
 
 interface DashboardStats {
   totalSources: number;

@@ -188,8 +188,9 @@ export function withAuthRequired<T = unknown>(handler: RequestHandler<T>): Reque
   return async (req: NextApiRequest, res: NextApiResponse<ApiResponse<T>>) => {
     // This would integrate with your auth system
     // For now, we'll use the existing CRON_SECRET approach
-    const expectedSecret = process.env.CRON_SECRET;
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const { auth, config } = await import('../config');
+    const expectedSecret = auth.cronSecret;
+    const isDevelopment = config.isDevelopment;
     
     if (!isDevelopment) {
       if (!expectedSecret) {

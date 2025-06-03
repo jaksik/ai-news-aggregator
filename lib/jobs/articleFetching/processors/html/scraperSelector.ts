@@ -2,13 +2,13 @@
 // appropriate scraping method for each website, balancing efficiency (standard scraper) 
 // with capability (enhanced scraper) to handle various website protection mechanisms.
 
-import { HTMLScraper, ScrapingConfig } from '../scrapers/htmlScraper';
-import { EnhancedHTMLScraper } from '../scrapers/puppeteerScraper';
+import { HTMLScraper, ScrapingConfig } from './cheerio';
+import { EnhancedHTMLScraper } from './puppeteer';
 
 export type ScrapeStrategy = 'standard' | 'enhanced' | 'auto';
 
 export interface ScraperSelectionResult {
-    scraper: HTMLScraper | EnhancedHTMLScraper;
+    scraper: typeof HTMLScraper | typeof EnhancedHTMLScraper;
     strategy: ScrapeStrategy;
     useEnhancedScraper: boolean;
 }
@@ -36,7 +36,7 @@ export class ScraperSelector {
      * Determines which scraper to use for a given website
      */
     static selectScraper(config: ScraperSelectionConfig): ScraperSelectionResult {
-        const { websiteId, sourceName, scrapingConfig, forceStrategy } = config;
+        const { websiteId, sourceName, forceStrategy } = config;
         
         let strategy: ScrapeStrategy;
         let useEnhancedScraper: boolean;
@@ -62,7 +62,7 @@ export class ScraperSelector {
             useEnhancedScraper = false; // Start with standard scraper for auto strategy
         }
 
-        const scraper = this.createScraper(useEnhancedScraper, scrapingConfig);
+        const scraper = this.createScraper(useEnhancedScraper);
 
         if (useEnhancedScraper) {
             console.log(`Using enhanced scraper for ${sourceName} (${websiteId}) - strategy: ${strategy}`);
@@ -80,11 +80,11 @@ export class ScraperSelector {
     /**
      * Creates the appropriate scraper instance
      */
-    private static createScraper(useEnhancedScraper: boolean, scrapingConfig: ScrapingConfig): HTMLScraper | EnhancedHTMLScraper {
+    private static createScraper(useEnhancedScraper: boolean): typeof HTMLScraper | typeof EnhancedHTMLScraper {
         if (useEnhancedScraper) {
-            return new EnhancedHTMLScraper(scrapingConfig);
+            return EnhancedHTMLScraper;
         } else {
-            return new HTMLScraper(scrapingConfig);
+            return HTMLScraper;
         }
     }
 
@@ -117,15 +117,10 @@ export class ScraperSelector {
     }
 
     /**
-     * Cleans up scraper resources if applicable
+     * Cleans up scraper resources if applicable (currently not needed for static scrapers)
      */
-    static async cleanupScraper(scraper: HTMLScraper | EnhancedHTMLScraper): Promise<void> {
-        if ('cleanup' in scraper) {
-            try {
-                await (scraper as EnhancedHTMLScraper).cleanup();
-            } catch (cleanupError) {
-                console.error('Error cleaning up scraper:', cleanupError);
-            }
-        }
+    static async cleanupScraper(): Promise<void> {
+        // No cleanup needed for static scrapers
+        // If we later need cleanup for Puppeteer browser instances, it will be handled internally
     }
 }
