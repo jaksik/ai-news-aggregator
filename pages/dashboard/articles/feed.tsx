@@ -23,6 +23,7 @@ const MainDashboardPage: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [categorizationMode, setCategorizationMode] = useState<boolean>(false);
   const [currentFilters, setCurrentFilters] = useState<FilterOptions>({
     source: '',
     startDate: '',
@@ -165,6 +166,39 @@ const MainDashboardPage: React.FC = () => {
     }
   }, []);
 
+  // Handle article categorization
+  const handleArticleCategorize = useCallback(async (articleId: string, newsCategory?: string, techCategory?: string) => {
+    try {
+      const response = await fetch(`/api/articles/${articleId}/categorize`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newsCategory, techCategory }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      // Update the local state immediately
+      setArticles(prevArticles => 
+        prevArticles.map(article => 
+          article._id === articleId 
+            ? { ...article, ...result.data } as IArticle
+            : article
+        )
+      );
+
+    } catch (err) {
+      console.error('Failed to categorize article:', err);
+      throw err; // Re-throw so the component can handle the error
+    }
+  }, []);
+
   // Load articles on initial page load
   useEffect(() => {
     const initialFilters: FilterOptions = {
@@ -183,8 +217,24 @@ const MainDashboardPage: React.FC = () => {
     <AuthWrapper>
       <DashboardLayout pageTitle="Article Feed - My Aggregator">
         <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Aggregated News Feed</h1>
-          <p className="text-md md:text-lg text-gray-600">Your latest articles from various sources.</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Aggregated News Feed</h1>
+              <p className="text-md md:text-lg text-gray-600">Your latest articles from various sources.</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setCategorizationMode(!categorizationMode)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  categorizationMode
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {categorizationMode ? 'Exit Categorization' : 'Categorize Mode'}
+              </button>
+            </div>
+          </div>
         </header>
 
         {/* Filters */}
@@ -220,6 +270,8 @@ const MainDashboardPage: React.FC = () => {
           loading={loading}
           onArticleVisibilityChange={handleArticleVisibilityChange}
           onArticleDelete={handleArticleDelete}
+          categorizationMode={categorizationMode}
+          onArticleCategorize={handleArticleCategorize}
         />
       </DashboardLayout>
     </AuthWrapper>

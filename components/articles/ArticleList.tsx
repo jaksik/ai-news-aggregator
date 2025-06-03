@@ -9,6 +9,8 @@ interface ArticleListProps {
   onArticleDelete: (articleId: string) => void;
   total?: number;
   loading?: boolean;
+  categorizationMode?: boolean;
+  onArticleCategorize?: (articleId: string, newsCategory?: string, techCategory?: string) => void;
 }
 
 const ArticleList: React.FC<ArticleListProps> = ({ 
@@ -16,7 +18,9 @@ const ArticleList: React.FC<ArticleListProps> = ({
   onArticleVisibilityChange,
   onArticleDelete,
   total,
-  loading = false
+  loading = false,
+  categorizationMode = false,
+  onArticleCategorize
 }) => {
   if (loading) {
     return (
@@ -68,6 +72,12 @@ const ArticleList: React.FC<ArticleListProps> = ({
             article={article} 
             onArticleVisibilityChange={onArticleVisibilityChange}
             onArticleDelete={onArticleDelete}
+            categorizationMode={categorizationMode}
+            onCategoryUpdate={async (articleId: string, updates: { newsCategory?: string; techCategory?: string }) => {
+              if (onArticleCategorize) {
+                await onArticleCategorize(articleId, updates.newsCategory, updates.techCategory);
+              }
+            }}
           />
         ))}
       </div>
