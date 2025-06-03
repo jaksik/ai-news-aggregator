@@ -1,14 +1,23 @@
 // File: components/articles/ArticleCard.tsx
 import React, { useState } from 'react';
 import { IArticle } from '../../models/Article'; // Adjust path if needed
+import CategoryButtons from './CategoryButtons';
 
 interface ArticleCardProps {
   article: IArticle;
   onArticleVisibilityChange: (articleId: string, isHidden: boolean) => void;
   onArticleDelete: (articleId: string) => void;
+  categorizationMode?: boolean;
+  onCategoryUpdate?: (articleId: string, updates: { newsCategory?: string; techCategory?: string }) => Promise<void>;
 }
 
-const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityChange, onArticleDelete }) => {
+const ArticleCard: React.FC<ArticleCardProps> = ({ 
+  article, 
+  onArticleVisibilityChange, 
+  onArticleDelete,
+  categorizationMode = false,
+  onCategoryUpdate
+}) => {
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -159,6 +168,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, onArticleVisibilityC
             </button>
           </div>
         </div>
+
+        {/* Category Buttons - Only show in categorization mode */}
+        {categorizationMode && onCategoryUpdate && (
+          <CategoryButtons 
+            article={article}
+            onCategoryUpdate={onCategoryUpdate}
+          />
+        )}
       </div>
     </div>
   );
