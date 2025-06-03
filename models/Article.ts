@@ -8,9 +8,13 @@ export interface IArticle extends Document {
   descriptionSnippet?: string; // A short summary
   guid?: string; // Optional: from RSS, can also be used for uniqueness if reliable
   fetchedAt: Date; // When your aggregator fetched this article
+  newsCategory?: string; // Optional: category of the article, if applicable
+  techCategory?: string; // Optional: technology category, if applicable
+  categorizationStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  categorizedAt?: Date;
   isRead: boolean;
   isStarred: boolean;
-  isHidden: boolean; 
+  isHidden: boolean;
 }
 
 const ArticleSchema: Schema<IArticle> = new Schema(
@@ -53,6 +57,24 @@ const ArticleSchema: Schema<IArticle> = new Schema(
       default: Date.now, // Automatically set to current time when document is created
       required: true,
     },
+    newsCategory: {
+      type: String,
+      index: true,
+    },
+    techCategory: {
+      type: String,
+      index: true,
+    },
+    categorizationStatus: {
+      type: String,
+      enum: ['pending', 'processing', 'completed', 'failed'],
+      default: 'pending',
+      index: true,
+    },
+    categorizedAt: {
+      type: Date,
+      index: true,
+    },
     isRead: {
       type: Boolean,
       default: false,
@@ -61,10 +83,10 @@ const ArticleSchema: Schema<IArticle> = new Schema(
       type: Boolean,
       default: false,
     },
-    isHidden: { 
+    isHidden: {
       type: Boolean,
-      default: false, 
-      index: true,   
+      default: false,
+      index: true,
     },
   },
   {

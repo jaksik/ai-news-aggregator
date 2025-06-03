@@ -20,6 +20,8 @@ const DashboardIndex: React.FC = () => {
     enabledSources: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [categorizing, setCategorizing] = useState(false);
+  const [categorizationResult, setCategorizationResult] = useState<string | null>(null);
 
 useEffect(() => {
   const fetchStats = async () => {
@@ -56,6 +58,28 @@ useEffect(() => {
 
   fetchStats();
 }, []);
+
+const handleAICategorization = async () => {
+  setCategorizing(true);
+  setCategorizationResult(null);
+  
+  try {
+    const response = await fetch('/api/ai/categorize', {
+      method: 'POST',
+    });
+    const data = await response.json();
+    
+    if (data.success) {
+      setCategorizationResult(`Successfully categorized ${data.categorized} articles`);
+    } else {
+      setCategorizationResult(`Error: ${data.error}`);
+    }
+  } catch (error) {
+    setCategorizationResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    setCategorizing(false);
+  }
+};
 
   return (
     <AuthWrapper>
@@ -154,6 +178,20 @@ useEffect(() => {
                 </div>
               </Link>
 
+              <button
+                onClick={handleAICategorization}
+                disabled={categorizing}
+                className="flex items-center p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors duration-200 border border-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-2xl mr-3">🤖</span>
+                <div>
+                  <h3 className="font-medium text-gray-800">
+                    {categorizing ? 'Categorizing...' : 'AI Categorize'}
+                  </h3>
+                  <p className="text-sm text-gray-600">Auto-categorize pending articles</p>
+                </div>
+              </button>
+
               <Link
                 href="/dashboard/controls"
                 className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-200 border border-purple-200"
@@ -176,6 +214,17 @@ useEffect(() => {
                 </div>
               </Link>
             </div>
+
+            {/* AI Categorization Result */}
+            {categorizationResult && (
+              <div className={`mt-4 p-4 rounded-lg ${
+                categorizationResult.includes('Error') 
+                  ? 'bg-red-50 border border-red-200 text-red-700' 
+                  : 'bg-green-50 border border-green-200 text-green-700'
+              }`}>
+                <p className="text-sm font-medium">{categorizationResult}</p>
+              </div>
+            )}
           </div>
 
           {/* Fetch Control */}

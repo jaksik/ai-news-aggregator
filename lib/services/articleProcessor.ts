@@ -54,7 +54,7 @@ export class ArticleProcessor {
   ): Promise<ProcessedArticleResult> {
     try {
       const normalizedData = this.normalizeArticleData(data, type);
-      
+
       if (!normalizedData.link) {
         return { action: 'skipped', error: 'Item missing link.' };
       }
@@ -81,7 +81,7 @@ export class ArticleProcessor {
    * @deprecated Use processArticle() instead
    */
   static async processRSSArticle(
-    item: RSSArticleData, 
+    item: RSSArticleData,
     sourceName: string
   ): Promise<ProcessedArticleResult> {
     return this.processArticle(item, sourceName, 'rss');
@@ -92,7 +92,7 @@ export class ArticleProcessor {
    * @deprecated Use processArticle() instead
    */
   static async processHTMLArticle(
-    article: HTMLArticleData, 
+    article: HTMLArticleData,
     sourceName: string
   ): Promise<ProcessedArticleResult> {
     return this.processArticle(article, sourceName, 'html');
@@ -110,8 +110,8 @@ export class ArticleProcessor {
       return {
         title: rssData.title?.trim() || 'Untitled Article',
         link: rssData.link?.trim(),
-        publishedDate: rssData.isoDate ? new Date(rssData.isoDate) : 
-                      (rssData.pubDate ? new Date(rssData.pubDate) : undefined),
+        publishedDate: rssData.isoDate ? new Date(rssData.isoDate) :
+          (rssData.pubDate ? new Date(rssData.pubDate) : undefined),
         description: rssData.contentSnippet || rssData.content?.substring(0, 300) || '',
         guid: rssData.guid,
         categories: rssData.categories || []
@@ -164,7 +164,8 @@ export class ArticleProcessor {
       fetchedAt: new Date(),
       isRead: false,
       isStarred: false,
-      categories: data.categories
+      categories: data.categories,
+      categorizationStatus: 'pending'
     });
   }
 }
