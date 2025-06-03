@@ -55,17 +55,6 @@ function getEnvNumber(key: string, defaultValue: number): number {
   return parsed;
 }
 
-// Unused function - keeping for potential future use
-// function getEnvFloat(key: string, defaultValue: number): number {
-//   const value = process.env[key];
-//   if (!value) return defaultValue;
-//   const parsed = parseFloat(value);
-//   if (isNaN(parsed)) {
-//     throw new Error(`Invalid float for environment variable ${key}: ${value}`);
-//   }
-//   return parsed;
-// }
-
 // Create the centralized configuration
 export const config: AppConfig = {
   nodeEnv: getEnvVar('NODE_ENV', 'development'),

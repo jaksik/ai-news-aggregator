@@ -19,7 +19,6 @@ import { fetchParseAndStoreSource } from './fetchUtils';
 // Import types
 import { 
     SourceToFetch, 
-    ProcessingSummary, 
     SingleSourceResult 
 } from './types';
 

@@ -16,7 +16,7 @@ import { ProcessingStatusManager } from '../../statusManager';
 import { ProcessingSummary, SourceToFetch } from '../../../../types';
 import { ScraperSelector } from './scraperSelector';
 import { getWebsiteScrapeConfig } from './websiteScrapeConfigs';
-import { getMaxArticlesPerSource } from '../../../../config/articleLimits';
+import { ConfigurationManager } from '../../configManager';
 
 export class HTMLProcessor {
     /**
@@ -72,7 +72,7 @@ export class HTMLProcessor {
             }
 
             // Apply article limits
-            const maxArticles = getMaxArticlesPerSource();
+            const maxArticles = ConfigurationManager.getArticleLimit();
             const limitedArticles = scrapedArticles.slice(0, maxArticles);
             summary.itemsConsidered = limitedArticles.length;
 
