@@ -1,6 +1,6 @@
 // File: components/sources/EditSourceModal.tsx
 import React, { useState, useEffect, FormEvent } from 'react';
-import { ISource } from '../../models/Source'; // Adjust path if needed
+import { ISource } from '../../lib/types';
 
 interface EditSourceModalProps {
   isOpen: boolean;

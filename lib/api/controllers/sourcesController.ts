@@ -1,12 +1,12 @@
 // File: lib/api/controllers/sourcesController.ts
 // Purpose: Standardized controller for sources API operations
 
-import dbConnect from '../../mongodb';
+import dbConnect from '../../db';
 import Source, { ISource } from '../../../models/Source';
 import { createSuccessResponse, createErrorResponse } from '../utils';
 import { RequestHandler } from '../types';
-import { processSingleSource, ProcessingSummary } from '../../services/fetcher';
-
+import { ProcessingSummary } from '../../types';
+import { processSingleSource } from '../../jobs/articleFetching/singleSourceOrchestrator';
 export interface SourcesListQuery {
   type?: string;
   isEnabled?: string;

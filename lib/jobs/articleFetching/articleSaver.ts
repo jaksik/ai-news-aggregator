@@ -5,7 +5,7 @@
 // Both RSS and HTML content sources are handled consistently
 // The database maintains clean, deduplicated article data
 
-import Article, { IArticle } from '../../models/Article';
+import Article, { IArticle } from '../../../models/Article';
 
 export interface ProcessedArticleResult {
   action: 'added' | 'skipped';
@@ -42,12 +42,12 @@ export interface NormalizedArticleData {
   categories: string[];
 }
 
-export class ArticleProcessor {
+export class ArticleSaver {
   /**
    * Unified article processing method - handles both RSS and HTML articles
    * Consolidates duplicate checking and article creation logic
    */
-  static async processArticle(
+  static async saveArticle(
     data: RSSArticleData | HTMLArticleData,
     sourceName: string,
     type: 'rss' | 'html'
@@ -78,24 +78,24 @@ export class ArticleProcessor {
 
   /**
    * Legacy RSS article processing method (maintained for backward compatibility)
-   * @deprecated Use processArticle() instead
+   * @deprecated Use saveArticle() instead
    */
   static async processRSSArticle(
     item: RSSArticleData,
     sourceName: string
   ): Promise<ProcessedArticleResult> {
-    return this.processArticle(item, sourceName, 'rss');
+    return this.saveArticle(item, sourceName, 'rss');
   }
 
   /**
    * Legacy HTML article processing method (maintained for backward compatibility) 
-   * @deprecated Use processArticle() instead
+   * @deprecated Use saveArticle() instead
    */
   static async processHTMLArticle(
     article: HTMLArticleData,
     sourceName: string
   ): Promise<ProcessedArticleResult> {
-    return this.processArticle(article, sourceName, 'html');
+    return this.saveArticle(article, sourceName, 'html');
   }
 
   /**

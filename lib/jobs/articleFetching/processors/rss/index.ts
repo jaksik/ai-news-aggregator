@@ -9,10 +9,10 @@
  */
 
 import Parser from 'rss-parser';
-import { ArticleProcessor } from './articleProcessor';
-import { ConfigurationManager, SourceConfiguration } from './configurationManager';
-import { ProcessingStatusManager } from './processingStatusManager';
-import { ProcessingSummary, SourceToFetch } from './fetcher';
+import { ArticleSaver } from '../../articleSaver';
+import { ConfigurationManager } from '../../configManager';
+import { ProcessingStatusManager } from '../../statusManager';
+import { ProcessingSummary, SourceToFetch } from '../../../../types';
 
 export class RSSProcessor {
     private static readonly rssParser = new Parser();
@@ -78,19 +78,20 @@ export class RSSProcessor {
      * Get RSS configuration using ConfigurationManager
      */
     private static getRSSConfiguration(source: SourceToFetch) {
-        const configManager = ConfigurationManager.getInstance();
-        
-        const sourceConfig: SourceConfiguration = {
+        const sourceConfig = {
             id: source.name,
             name: source.name,
             url: source.url,
             type: 'rss'
         };
 
-        const rssConfig = configManager.createRSSConfiguration(sourceConfig);
-        configManager.logConfiguration(sourceConfig);
-        
-        return rssConfig;
+        // Validate the source
+        const validation = ConfigurationManager.validateSource(sourceConfig);
+        if (!validation.isValid) {
+            throw new Error(`Invalid RSS source: ${validation.errors.join(', ')}`);
+        }
+
+        return ConfigurationManager.getRSSConfiguration(sourceConfig);
     }
 
     /**
@@ -123,7 +124,7 @@ export class RSSProcessor {
         for (const item of items) {
             summary.itemsProcessed++;
             
-            const result = await ArticleProcessor.processArticle(item, sourceName, 'rss');
+            const result = await ArticleSaver.saveArticle(item, sourceName, 'rss');
             
             if (result.action === 'added') {
                 summary.newItemsAdded++;

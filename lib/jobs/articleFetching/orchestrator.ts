@@ -21,64 +21,22 @@
 import mongoose from 'mongoose'; // Import mongoose for Types.ObjectId
 
 // MongoDB and Models
-import dbConnect from '../mongodb';
-import Source from '../../models/Source'; 
-import FetchRunLog, { IFetchRunLog } from '../../models/FetchRunLog';
+import dbConnect from '../../db';
+import Source from '../../../models/Source'; 
+import FetchRunLog, { IFetchRunLog } from '../../../models/FetchRunLog';
 
-// Import dedicated processors for RSS and HTML content
-import { RSSProcessor } from './rssProcessor';
-import { HTMLProcessor } from './htmlProcessor';
+// Import dedicated processor router for unified source processing
+import { ProcessorRouter } from './processors/router';
 
-// --- Interface Definitions ---
+// Import centralized configuration
+import { scraping } from '../../config';
 
-export interface SourceToFetch {
-    url: string;
-    type: 'rss' | 'html';
-    name: string;
-    websiteId?: string;
-    customSelectors?: {
-        articleSelector?: string;
-        titleSelector?: string;
-        urlSelector?: string;
-        dateSelector?: string;
-        descriptionSelector?: string;
-    };
-}
-
-export interface ItemError {
-    itemTitle?: string;
-    itemLink?: string;
-    message: string;
-}
-
-export interface ProcessingSummary {
-    sourceUrl: string;
-    sourceName: string;
-    type: 'rss' | 'html';
-    status: 'success' | 'partial_success' | 'failed';
-    message: string;
-    itemsFound: number;       // Total items found in the source before limiting
-    itemsConsidered: number;  // <<-- NEW FIELD: Number of items considered after applying the limit
-    itemsProcessed: number;   // Items we actually attempted to save
-    newItemsAdded: number;
-    itemsSkipped: number;
-    errors: ItemError[];
-    fetchError?: string;
-    logId?: string;  // Optional log ID for individual source fetches
-}
-
-export interface OverallFetchRunResult {
-    startTime: Date;
-    endTime: Date;
-    status: 'completed' | 'completed_with_errors' | 'failed' | 'in-progress';
-    totalSourcesAttempted: number;
-    totalSourcesSuccessfullyProcessed: number;
-    totalSourcesFailedWithError: number;
-    totalNewArticlesAddedAcrossAllSources: number;
-    detailedSummaries: ProcessingSummary[];
-    orchestrationErrors: string[];
-    logId?: string;
-}
+// Import types
+import { 
+    SourceToFetch, 
+    ProcessingSummary, 
+    OverallFetchRunResult 
+} from '../../types';
 
 // --- Helper Functions ---
 
@@ -86,7 +44,7 @@ export interface OverallFetchRunResult {
 const fetchWithUserAgent = async (url: string): Promise<Response> => {
   return fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'User-Agent': scraping.userAgent,
       'Accept': 'application/rss+xml, application/xml, text/xml, */*',
       'Accept-Language': 'en-US,en;q=0.9',
       'Accept-Encoding': 'gzip, deflate, br',
@@ -95,7 +53,7 @@ const fetchWithUserAgent = async (url: string): Promise<Response> => {
       'Upgrade-Insecure-Requests': '1',
     },
     // Add timeout to prevent hanging
-    signal: AbortSignal.timeout(30000), // 30 second timeout
+    signal: AbortSignal.timeout(scraping.defaultTimeout),
   });
 };
 
@@ -127,20 +85,11 @@ export async function fetchParseAndStoreSource(
         
         const rawContent = await response.text();
 
-        if (source.type === 'rss') {
-            // RSS processing using dedicated RSSProcessor
-            const rssResult = await RSSProcessor.processRSSSource(source, rawContent);
-            
-            // Copy results from RSS processor to main summary
-            Object.assign(summary, rssResult);
-
-        } else if (source.type === 'html') {
-            // HTML processing using dedicated HTMLProcessor
-            const htmlResult = await HTMLProcessor.processHTMLSource(source, rawContent);
-            
-            // Copy results from HTML processor to main summary
-            Object.assign(summary, htmlResult);
-        }
+        // Use unified processor router for all source types
+        const processingResult = await ProcessorRouter.processSource(source, rawContent);
+        
+        // Copy results from processor to main summary
+        Object.assign(summary, processingResult);
     } catch (error: unknown) {
         let message = 'Failed to fetch or process source.';
         if (error instanceof Error) {

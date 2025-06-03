@@ -1,7 +1,7 @@
 // File: lib/api/controllers/articlesController.ts
 // Purpose: Standardized controller for articles API operations
 
-import dbConnect from '../../mongodb';
+import dbConnect from '../../db';
 import Article, { IArticle } from '../../../models/Article';
 import { createSuccessResponse, createErrorResponse } from '../utils';
 import { RequestHandler } from '../types';

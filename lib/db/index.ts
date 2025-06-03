@@ -1,9 +1,8 @@
 // File: /lib/mongodb/index.ts
 import mongoose, { Mongoose } from 'mongoose';
+import { database } from '../config';
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
+if (!database.uri) {
   throw new Error(
     'Please define the MONGODB_URI environment variable inside .env.local'
   );
@@ -34,8 +33,10 @@ async function dbConnect(): Promise<Mongoose> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      maxPoolSize: database.options?.maxPoolSize,
+      serverSelectionTimeoutMS: database.options?.serverSelectionTimeoutMS,
     };
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(database.uri, opts).then((mongooseInstance) => {
       return mongooseInstance;
     });
   }

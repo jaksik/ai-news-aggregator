@@ -1,4 +1,4 @@
-import { ScrapingConfig } from './htmlScraper';
+import { ScrapingConfig } from './cheerio';
 
 export const websiteConfigs: Record<string, ScrapingConfig> = {
   'anthropic-news': {
@@ -37,6 +37,6 @@ export const websiteConfigs: Record<string, ScrapingConfig> = {
   }
 };
 
-export function getWebsiteConfig(websiteId: string): ScrapingConfig | null {
+export function getWebsiteScrapeConfig(websiteId: string): ScrapingConfig | null {
   return websiteConfigs[websiteId] || null;
 }

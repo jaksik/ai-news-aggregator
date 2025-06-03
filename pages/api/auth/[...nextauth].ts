@@ -1,17 +1,18 @@
 import NextAuth, { AuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import { auth } from '../../../lib/config'
 
 export const authOptions: AuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: auth.googleClientId,
+      clientSecret: auth.googleClientSecret,
     })
   ],
   callbacks: {
     async signIn({ user }) {
       // Only allow your specific email
-      if (user.email === process.env.AUTHORIZED_EMAIL) {
+      if (user.email === auth.authorizedEmail) {
         return true
       }
       return false
