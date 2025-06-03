@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/sources/scrape-all",
-      "schedule": "20 04 * * *" 
+      "schedule": "20 09 * * *" 
     }
   ]
 }
