@@ -23,7 +23,6 @@ export const websiteConfigs: Record<string, ScrapingConfig> = {
     descriptionSelector: '.excerpt, .summary, p:first-of-type',
     dateSelector: 'time, .date, .published',
     skipArticlesWithoutDates: true, // Skip featured articles that don't have proper date elements
-
   },
 
   'scale-blog': {

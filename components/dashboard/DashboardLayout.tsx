@@ -23,7 +23,6 @@ const navItems: NavItem[] = [
   { href: '/dashboard/articles/feed', label: 'Article Feed', icon: '📰', category: 'management' },
   { href: '/dashboard/articles/sources', label: 'Manage Sources', icon: '🌐', category: 'management' },
   { href: '/dashboard/articles/fetcher-logs', label: 'Fetch Logs', icon: '📊', category: 'management' },
-  { href: '/dashboard/newsletter', label: 'Newsletter', icon: '📬', category: 'content' },
   { href: '/dashboard/tools', label: 'Tools', icon: '🛠️', category: 'tools' },
   { href: '/dashboard/tools/create', label: 'Create Tool', icon: '➕', category: 'tools' },
 ];

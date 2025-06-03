@@ -68,21 +68,8 @@ const validateSource: RequestHandler<ValidationResult> = async (req, res) => {
 
     // Type-specific validation
     if (source.type === 'html') {
-      if (!source.scrapingConfig) {
-        errors.push('Scraping configuration is required for HTML sources');
-      } else {
-        const config = source.scrapingConfig;
-        if (!config.websiteId) {
-          errors.push('Website ID is required for HTML sources');
-        }
-        if (config.customSelectors) {
-          if (!config.customSelectors.titleSelector) {
-            warnings.push('Title selector not specified in custom selectors');
-          }
-          if (!config.customSelectors.urlSelector) {
-            warnings.push('URL selector not specified in custom selectors');
-          }
-        }
+      if (!source.websiteId) {
+        errors.push('Website ID is required for HTML sources');
       }
     }
 
