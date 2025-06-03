@@ -19,7 +19,7 @@ const NewsletterPage: React.FC = () => {
         throw new Error('Failed to fetch newsletters');
       }
       const data = await response.json();
-      setNewsletters(data.newsletters || []);
+      setNewsletters(data.data?.newsletters || []);
     } catch (err) {
       console.error('Failed to fetch newsletters:', err);
     } finally {

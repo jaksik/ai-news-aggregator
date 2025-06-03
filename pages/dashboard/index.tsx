@@ -21,37 +21,41 @@ const DashboardIndex: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // Fetch sources count
-        const sourcesResponse = await fetch('/api/sources');
-        const sourcesData = await sourcesResponse.json();
-        const sources = sourcesData.sources || [];
-        
-        // Fetch articles count
-        const articlesResponse = await fetch('/api/articles?limit=1');
-        const articlesData = await articlesResponse.json();
-        
-        // Fetch recent fetch logs
-        const logsResponse = await fetch('/api/logs?limit=5');
-        const logsData = await logsResponse.json();
-        
-        setStats({
-          totalSources: sources.length,
-          totalArticles: articlesData.totalArticles || 0,
-          recentFetches: (logsData.logs || []).length,
-          enabledSources: sources.filter((source: ISource) => source.isEnabled).length,
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      // Fetch sources count
+      const sourcesResponse = await fetch('/api/sources');
+      const sourcesData = await sourcesResponse.json();
+      const sources = sourcesData.data || [];
+      
+      // Fetch articles count - articles API returns paginated response
+      const articlesResponse = await fetch('/api/articles?limit=1');
+      const articlesData = await articlesResponse.json();
+      const totalArticles = articlesData.data ? 
+        (articlesData.meta?.pagination?.total || 0) : 0;
+      
+      // Fetch recent fetch logs - logs API returns nested structure
+      const logsResponse = await fetch('/api/logs?limit=5');
+      const logsData = await logsResponse.json();
+      const recentFetches = logsData.data ? 
+        (logsData.data.logs ? logsData.data.logs.length : 0) : 0;
+      
+      setStats({
+        totalSources: sources.length,
+        totalArticles,
+        recentFetches,
+        enabledSources: sources.filter((source: ISource) => source.isEnabled).length,
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStats();
-  }, []);
+  fetchStats();
+}, []);
 
   return (
     <AuthWrapper>

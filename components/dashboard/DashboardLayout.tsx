@@ -45,8 +45,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, pageTitle =
         {/* Sidebar */}
         <aside className="w-full md:w-64 bg-slate-800 text-slate-100 p-5 space-y-6 shadow-lg md:sticky md:top-0 md:h-screen">
           <div className="text-center md:text-left">
-            <Link href="/dashboard" legacyBehavior>
-              <a className="text-2xl font-bold hover:text-indigo-300 transition-colors">My Aggregator</a>
+            <Link href="/dashboard/dash-test" legacyBehavior>
+              <a className="text-2xl font-bold hover:text-indigo-300 transition-colors">Built With AI</a>
             </Link>
             <p className="text-xs text-slate-400 mt-1">Personal News Feed</p>
           </div>
