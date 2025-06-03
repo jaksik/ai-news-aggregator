@@ -38,17 +38,12 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSour
         url: string;
         type: string;
         isEnabled: boolean;
-        scrapingConfig?: {
-          websiteId: string;
-          customSelectors?: Record<string, string>;
-        };
+        websiteId?: string;
       } = { name, url, type, isEnabled: true };
       
-      // Add scrapingConfig for HTML sources
+      // Add websiteId for HTML sources
       if (type === 'html') {
-        requestBody.scrapingConfig = {
-          websiteId: websiteId
-        };
+        requestBody.websiteId = websiteId;
       }
 
       const response = await fetch('/api/sources', {

@@ -95,7 +95,7 @@ export class HTMLProcessor {
             name: source.name,
             url: source.url,
             type: 'html',
-            scrapingConfig: source.scrapingConfig
+            websiteId: source.websiteId
         };
 
         configManager.logConfiguration(sourceConfig);
@@ -108,12 +108,12 @@ export class HTMLProcessor {
      * Select appropriate scraper using ScraperSelector service
      */
     private static selectScraper(source: SourceToFetch, config: ScrapingConfig) {
-        if (!source.scrapingConfig?.websiteId) {
-            throw new Error(`HTML source ${source.name} missing required websiteId in scrapingConfig`);
+        if (!source.websiteId) {
+            throw new Error(`Invalid source configuration: HTML sources require websiteId`);
         }
 
         const scraperSelection = ScraperSelector.selectScraper({
-            websiteId: source.scrapingConfig.websiteId,
+            websiteId: source.websiteId,
             sourceName: source.name,
             scrapingConfig: config
         });

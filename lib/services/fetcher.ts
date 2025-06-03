@@ -35,15 +35,13 @@ export interface SourceToFetch {
     url: string;
     type: 'rss' | 'html';
     name: string;
-    scrapingConfig?: {
-        websiteId: string;
-        customSelectors?: {
-            articleSelector?: string;
-            titleSelector?: string;
-            urlSelector?: string;
-            dateSelector?: string;
-            descriptionSelector?: string;
-        };
+    websiteId?: string;
+    customSelectors?: {
+        articleSelector?: string;
+        titleSelector?: string;
+        urlSelector?: string;
+        dateSelector?: string;
+        descriptionSelector?: string;
     };
 }
 
@@ -207,7 +205,7 @@ export async function processSingleSource(sourceId: string): Promise<ProcessingS
             name: source.name,
             url: source.url,
             type: source.type,
-            scrapingConfig: source.scrapingConfig,
+            websiteId: source.websiteId,
         };
 
         // Use the centralized fetcher function
@@ -360,7 +358,7 @@ export async function processAllEnabledSources(): Promise<OverallFetchRunResult>
                     url: sourceDoc.url,
                     type: sourceDoc.type,
                     name: sourceDoc.name,
-                    scrapingConfig: sourceDoc.scrapingConfig,
+                    websiteId: sourceDoc.websiteId,
                 };
                 const summary = await fetchParseAndStoreSource(sourceInput);
                 detailedSummaries.push(summary);

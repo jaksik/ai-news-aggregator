@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ImageUpload } from '../ui/ImageUpload';
+import { ImageUpload } from './ImageUpload';
 
 interface Tool {
   _id: string;

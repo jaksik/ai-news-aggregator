@@ -13,6 +13,7 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
   const [name, setName] = useState<string>('');
   const [url, setUrl] = useState<string>('');
   const [type, setType] = useState<'rss' | 'html'>('rss');
+  const [websiteId, setWebsiteId] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -21,11 +22,13 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
       setName(sourceToEdit.name);
       setUrl(sourceToEdit.url);
       setType(sourceToEdit.type);
+      setWebsiteId(sourceToEdit.websiteId || '');
     } else {
       // Reset form if sourceToEdit becomes null (e.g., modal closed and reopened without a source)
       setName('');
       setUrl('');
       setType('rss');
+      setWebsiteId('');
     }
   }, [sourceToEdit]); // Re-populate form when sourceToEdit changes
 
@@ -45,14 +48,32 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
       return;
     }
 
+    if (type === 'html' && !websiteId.trim()) {
+      setFormError('Website ID is required for HTML sources.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
+      const requestBody: {
+        name: string;
+        url: string;
+        type: string;
+        websiteId?: string;
+      } = { name, url, type };
+      
+      // Add websiteId for HTML sources
+      if (type === 'html') {
+        requestBody.websiteId = websiteId;
+      }
+
       const response = await fetch(`/api/sources/${sourceToEdit._id.toString()}`, { // Using your /api/sources/[sourceId] PUT endpoint
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         // Send all editable fields. The backend PUT handler only updates fields that are present.
-        body: JSON.stringify({ name, url, type }),
+        body: JSON.stringify(requestBody),
       });
 
       // Check if response is actually JSON before parsing
@@ -148,6 +169,29 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ isOpen, onClose, onSo
               <option value="html">HTML Webpage</option>
             </select>
           </div>
+
+          {type === 'html' && (
+            <div className="mb-6">
+              <label htmlFor="editWebsiteId" className="block text-sm text-gray-700 mb-1 font-semibold">
+                Website Configuration
+              </label>
+              <select
+                id="editWebsiteId"
+                value={websiteId}
+                onChange={(e) => setWebsiteId(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+                required
+              >
+                <option value="">Select a website configuration...</option>
+                <option value="anthropic-news">Anthropic News</option>
+                <option value="elevenlabs-blog">ElevenLabs Blog</option>
+                <option value="scale-blog">Scale AI Blog</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Choose the pre-configured website scraping settings that match your target site.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-end space-x-3">
             <button

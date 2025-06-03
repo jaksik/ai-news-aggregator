@@ -12,11 +12,9 @@ export interface SourceConfiguration {
     name: string;
     url: string;
     type: 'rss' | 'html';
-    scrapingConfig?: {
-        websiteId: string;
-        customSelectors?: Partial<Pick<ScrapingConfig, 
-            'articleSelector' | 'titleSelector' | 'urlSelector' | 'dateSelector' | 'descriptionSelector'>>;
-    };
+    websiteId?: string;
+    customSelectors?: Partial<Pick<ScrapingConfig, 
+        'articleSelector' | 'titleSelector' | 'urlSelector' | 'dateSelector' | 'descriptionSelector'>>;
 }
 
 export interface MergedScrapingConfig extends ScrapingConfig {
@@ -111,25 +109,25 @@ export class ConfigurationManager {
 
         // HTML-specific validation
         if (source.type === 'html') {
-            if (!source.scrapingConfig?.websiteId) {
-                errors.push('HTML sources require scrapingConfig with websiteId');
+            if (!source.websiteId) {
+                errors.push('HTML sources require websiteId');
             } else {
-                const websiteConfig = getWebsiteConfig(source.scrapingConfig.websiteId);
+                const websiteConfig = getWebsiteConfig(source.websiteId);
                 if (!websiteConfig) {
-                    errors.push(`No configuration found for websiteId: ${source.scrapingConfig.websiteId}`);
+                    errors.push(`No configuration found for websiteId: ${source.websiteId}`);
                 }
             }
 
             // Check for custom selectors without base config
-            if (source.scrapingConfig?.customSelectors && !source.scrapingConfig.websiteId) {
+            if (source.customSelectors && !source.websiteId) {
                 warnings.push('Custom selectors provided but no websiteId specified');
             }
         }
 
         // RSS-specific validation
         if (source.type === 'rss') {
-            if (source.scrapingConfig) {
-                warnings.push('RSS sources do not need scrapingConfig');
+            if (source.websiteId) {
+                warnings.push('RSS sources do not need websiteId');
             }
         }
 
@@ -153,9 +151,9 @@ export class ConfigurationManager {
             throw new Error(`Invalid source configuration: ${validation.errors.join(', ')}`);
         }
 
-        const websiteConfig = getWebsiteConfig(source.scrapingConfig!.websiteId);
+        const websiteConfig = getWebsiteConfig(source.websiteId!);
         if (!websiteConfig) {
-            throw new Error(`No configuration found for websiteId: ${source.scrapingConfig!.websiteId}`);
+            throw new Error(`No configuration found for websiteId: ${source.websiteId!}`);
         }
 
         // Merge configurations with proper precedence
@@ -170,8 +168,8 @@ export class ConfigurationManager {
         };
 
         // Apply custom selectors if provided
-        if (source.scrapingConfig?.customSelectors) {
-            const custom = source.scrapingConfig.customSelectors;
+        if (source.customSelectors) {
+            const custom = source.customSelectors;
             
             if (custom.articleSelector) {
                 mergedConfig.articleSelector = custom.articleSelector;
@@ -246,8 +244,8 @@ export class ConfigurationManager {
         console.log(`Configuration for ${source.name}:`, {
             type: source.type,
             url: source.url,
-            websiteId: source.scrapingConfig?.websiteId,
-            hasCustomSelectors: !!source.scrapingConfig?.customSelectors,
+            websiteId: source.websiteId,
+            hasCustomSelectors: !!source.customSelectors,
             maxArticles: this.context.maxArticles
         });
     }

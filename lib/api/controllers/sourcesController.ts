@@ -69,7 +69,7 @@ export const listSources: RequestHandler<ISource[]> = async (req, res) => {
 export const createSource: RequestHandler<ISource> = async (req, res) => {
   await dbConnect();
 
-  const { name, url, type, isEnabled = true, scrapingConfig } = req.body;
+  const { name, url, type, isEnabled = true, websiteId } = req.body;
 
   // Validation
   if (!name || !url || !type) {
@@ -98,7 +98,7 @@ export const createSource: RequestHandler<ISource> = async (req, res) => {
       url: url.trim(),
       type,
       isEnabled,
-      scrapingConfig: scrapingConfig || {},
+      websiteId: websiteId || undefined,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -164,7 +164,7 @@ export const updateSource: RequestHandler<ISource> = async (req, res) => {
   }
 
   // Only allow specific fields to be updated
-  const allowedUpdates = ['name', 'url', 'type', 'isEnabled', 'scrapingConfig'];
+const allowedUpdates = ['name', 'url', 'type', 'isEnabled', 'websiteId'];
   const filteredUpdates: Record<string, unknown> = {};
 
   for (const key of allowedUpdates) {

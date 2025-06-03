@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../../components/auth/AuthWrapper';
-import { ImageUpload } from '../../../components/ui/ImageUpload';
+import { ImageUpload } from '../../../components/tools/ImageUpload';
 
 interface ToolFormData {
   name: string;
