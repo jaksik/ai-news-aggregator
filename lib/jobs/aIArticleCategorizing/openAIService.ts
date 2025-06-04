@@ -1,13 +1,10 @@
 // OpenAI service for article categorization
 import OpenAI from 'openai';
-import { ErrorHandler } from '../../errors/errorHandler';
 import { buildCategorizationPrompt } from './corePrompt';
 import type { 
   ArticleForCategorization, 
   CategorizedArticleResponse, 
-  OpenAICategorizationResponse,
-  NewsCategoryType,
-  TechCategoryType 
+  OpenAICategorizationResponse
 } from './types';
 
 export class OpenAICategorizationService {

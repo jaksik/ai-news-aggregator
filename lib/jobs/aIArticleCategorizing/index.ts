@@ -2,7 +2,6 @@
 import dbConnect from '../../db';
 import Article from '../../../models/Article';
 import { OpenAICategorizationService } from './openAIService';
-import { ErrorHandler } from '../../errors/errorHandler';
 import type { 
   UncategorizedArticle, 
   ArticleForCategorization, 

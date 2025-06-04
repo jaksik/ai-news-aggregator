@@ -48,6 +48,6 @@ export interface OpenAICategorizationResponse {
   categorized_articles?: CategorizedArticleResponse[];
   articles?: CategorizedArticleResponse[];
   data?: CategorizedArticleResponse[];
-  // Allow for direct array response
-  [key: string]: any;
+  // Allow for direct array response or unknown properties
+  [key: string]: CategorizedArticleResponse[] | unknown;
 }

@@ -9,7 +9,7 @@ For each article I provide (consisting of a title and meta description), you wil
 
 1. Analyze the title and meta description against the "Criteria for Categorization" below.
 
-2. Assign ONE news category AND ONE tech category to the article.
+2. *Assign ONE news category AND ONE tech category to the article provided for curation*.
 
 3. Provide a brief (1-2 sentence) rationale for your categorization, referencing specific keywords or phrases from the title/meta if they strongly influenced your decision.
 
@@ -20,12 +20,11 @@ For each article I provide (consisting of a title and meta description), you wil
 1. **Top Story Candidate:**
    * **Nature:** Major, impactful news. High signal, low noise.
    * **Keywords/Signals:** "New model released," "launches," "unveils," "breakthrough," "major partnership," "acquires," "significant funding ($50M+)," "new GPU/hardware," "foundational model," "open source."
-   * **Sources:** Google, OpenAI, Meta, Anthropic, NVIDIA, AWS, Apple, Microsoft, Hugging Face, leading research institutions.
    * **Content:** Announcements of new AI products, services, significant model versions, major research papers with clear breakthroughs, or high-impact business news.
 
 2. **Solid News:**
    * **Nature:** Important and factual updates, but perhaps not groundbreaking enough for a top headline.
-   * **Keywords/Signals:** "Updates," "enhances," "new feature," "integrates," "expands," "study shows," "report finds," "secures funding (under $50M)."
+   * **Keywords/Signals:** "Updates," "enhances," "new feature," "integrates," "expands," "study shows," "report finds," "secures funding"
    * **Content:** Significant updates to existing AI tools/platforms, new noteworthy features, interesting case studies with concrete results, well-supported industry reports.
 
 3. **Interesting but Lower Priority:**
@@ -43,7 +42,7 @@ For each article I provide (consisting of a title and meta description), you wil
 1. **Products and Updates:** New AI products, major feature releases, significant model launches, hardware announcements
 2. **Developer Tools:** APIs, frameworks, coding tools, SDKs, development platforms, technical utilities
 3. **Research and Innovation:** Research papers, academic breakthroughs, novel techniques, experimental findings, scientific studies
-4. **Industry Trends:** Market analysis, business trends, adoption studies, industry reports, strategic insights
+4. **Industry Trends:** Market analysis, business trends, adoption studies, industry reports, strategic insights, company shifts
 5. **Startups and Funding:** Investment news, startup announcements, funding rounds, acquisitions, business developments
 6. **Not Relevant:** Non-tech content, general news, opinion pieces without technical substance, promotional material
 
@@ -67,75 +66,185 @@ export const CATEGORIZATION_EXAMPLES = `## EXAMPLES OF MY PREFERRED CURATION:
 
 [
   {
-    "objectId": "507f1f77bcf86cd799439011",
-    "original_title": "OpenAI's Sora is now available for FREE to all users through Microsoft Bing Video Creator on mobile",
-    "newsCategory": "Top Story Candidate",
-    "techCategory": "Products and Updates",
-    "brief_rationale": "Major AI product (Sora) becoming freely available through Microsoft partnership represents a significant accessibility breakthrough in AI video generation."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439012",
-    "original_title": "SynthID Detector — a new portal to help identify AI-generated content",
-    "newsCategory": "Solid News",
-    "techCategory": "Developer Tools",
-    "brief_rationale": "Introduction of a new detection tool for AI-generated content is important for the ecosystem but represents an incremental tool release rather than groundbreaking news."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439013",
-    "original_title": "Our vision for building a universal AI assistant",
-    "newsCategory": "Interesting but Lower Priority",
-    "techCategory": "Industry Trends",
-    "brief_rationale": "Vision piece discussing conceptual AI assistant development - interesting for understanding company direction but not immediate news."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439014",
-    "original_title": "NVIDIA Announces Upcoming Events for Financial Community",
-    "newsCategory": "Likely Noise or Opinion",
-    "techCategory": "Not Relevant",
-    "brief_rationale": "Event announcement for financial community lacks technical substance and is more promotional than newsworthy."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439015",
-    "original_title": "Build GraphRAG applications using Amazon Bedrock Knowledge Bases",
-    "newsCategory": "Interesting but Lower Priority",
-    "techCategory": "Developer Tools",
-    "brief_rationale": "Technical tutorial on using existing AWS services for GraphRAG - useful for developers but represents educational content rather than breaking news."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439016",
-    "original_title": "Anthropic tripled its revenue in 5 months - and this is why",
-    "newsCategory": "Interesting but Lower Priority",
-    "techCategory": "Startups and Funding",
-    "brief_rationale": "Business performance update for AI startup showing significant growth - noteworthy for industry tracking but not top-tier news."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439017",
-    "original_title": "Researchers and Students in Türkiye Build AI, Robotics Tools to Boost Disaster Readiness",
-    "newsCategory": "Interesting but Lower Priority",
-    "techCategory": "Research and Innovation",
-    "brief_rationale": "Research application of AI for disaster preparedness - interesting social application but niche in scope and impact."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439018",
-    "original_title": "The Trump administration has shut down more than 100 climate studies",
-    "newsCategory": "Likely Noise or Opinion",
-    "techCategory": "Not Relevant",
-    "brief_rationale": "Political news about research funding cuts - while impactful, not directly AI/tech focused and more general news."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439019",
-    "original_title": "Create videos with your words for free – Introducing Bing Video Creator",
-    "newsCategory": "Top Story Candidate",
-    "techCategory": "Products and Updates",
-    "brief_rationale": "Launch of free AI video creation tool powered by Sora through Microsoft Bing represents significant accessibility milestone for AI-generated media."
-  },
-  {
-    "objectId": "507f1f77bcf86cd799439020",
-    "original_title": "ElevenLabs now verified on n8n Cloud",
-    "newsCategory": "Solid News",
-    "techCategory": "Developer Tools",
-    "brief_rationale": "Platform integration announcement between AI voice service and automation platform - solid update for developer ecosystem."
-  }
+      "title": "Meta plans to automate many of its product risk assessments",
+      "description": "An AI-powered system could soon take responsibility for evaluating the potential harms and privacy risks of up to 90% of updates made to Meta apps like Instagram and WhatsApp, according to internal documents reportedly viewed by NPR. NPR says a 2012 agreement between Facebook (now Meta) and the Federal Trade Commission requires the company to […]",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Industry Trends"
+    },
+    {
+      "title": "Google quietly released an app that lets you download and run AI models locally",
+      "description": "Last week, Google quietly released an app that lets users run a range of openly available AI models from the AI dev platform Hugging Face on their phones. Called Google AI Edge Gallery, the app is available for Android and will soon come to iOS. It allows users to find, download, and run compatible models […]",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Developer Tools"
+    },
+    {
+      "title": "The future of engineering belongs to those who build with AI, not without it",
+      "description": "As we look ahead, the relationship between engineers and AI systems will likely evolve from tool and user to something more symbiotic.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Industry Trends"
+    },
+    {
+      "title": "How to Make AI Faster and Smarter—With a Little Help from Physics",
+      "description": "Rose Yu has drawn on the principles of fluid dynamics to improve deep learning systems that predict traffic, model the climate, and stabilize drones during flight.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "Model Context Protocol: A promising AI integration layer, but not a standard (yet)",
+      "description": "Enterprises should experiment with MCP where it adds value, isolate dependencies and prepare for a multi-protocol future.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "Early AI investor Elad Gil finds his next big bet: AI-powered rollups",
+      "description": "Elad Gil started betting on AI before most of the world took notice. By the time investors began grasping the implications of ChatGPT, Gil had already written seed checks to startups like Perplexity, Character.AI, and Harvey. Now, as the early winners of the AI wave become clearer, the renowned “solo” VC is increasingly focused on […]",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Industry Trends"
+    },
+    {
+      "title": "Sam Altman biographer Keach Hagey explains why the OpenAI CEO was ‘born for this moment’",
+      "description": "In “The Optimist: Sam Altman, OpenAI, and the Race to Invent the Future,” Wall Street Journal reporter Keach Hagey examines our AI-obsessed moment through one of its key figures — Sam Altman, co-founder and CEO of OpenAI. Hagey begins with Altman’s Midwest childhood, then takes readers through his career at startup Loopt, accelerator Y Combinator, […]",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Industry Trends"
+    },
+    {
+      "title": "This palm recognition smart lock doubles as a video doorbell (and has no monthly fees)",
+      "description": "The Eufy Familock S3 Max is among the best smart locks I've tested, thanks to a standout feature designed with families in mind.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "4 days to go: TechCrunch Sessions: AI is almost in session",
+      "description": "Artificial intelligence has no shortage of visionaries—but the ones who matter are executing. In 4 days, TechCrunch Sessions: AI brings those builders, researchers, funders, and enthusiasts under one roof at UC Berkeley’s Zellerbach Hall. This isn’t a parade of AI hype or a string of over-edited keynotes. It’s a single day designed for clarity, candor, […]",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Day 4 of TechCrunch Sessions: AI Trivia Countdown — Flex your brain, score big on tickets",
+      "description": "TechCrunch Sessions: AI hits UC Berkeley’s Zellerbach Hall on June 5 — and today’s your shot at AI trivia glory and two tickets for the price of one. Answer a few brain-busting questions on artificial intelligence, and if you ace it, you might just find a special promo code waiting in your inbox. Every day […]",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "IBM and Roche Co-Created an Innovative Solution to Support People with Diabetes in their Daily Lives with AI-Enabled Glucose Predictions",
+      "description": "●\tAI-enabled continuous glucose monitoring app provides supportive predictions for people with diabetes.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "The Download: US climate studies are being shut down, and building cities from lava",
+      "description": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. The Trump administration has shut down more than 100 climate studies The Trump administration has terminated National Science Foundation grants for more than 100 research projects related to climate change, according to an…",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "The Trump administration has shut down more than 100 climate studies",
+      "description": "The Trump administration has terminated National Science Foundation grants for more than 100 research projects related to climate change amid a widening campaign to slash federal funding for scientists and institutions studying the rising risks of a warming world. The move will cut off what’s likely to amount to tens of millions of dollars for…",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Aethir enables better user acquisition via Instant Play streaming for Doctor Who: Worlds Apart",
+      "description": "Aethir provides better computing efficiency with its Instant Play streaming solution for Doctor Who: Worlds Apart.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Researchers and Students in Türkiye Build AI, Robotics Tools to Boost Disaster Readiness",
+      "description": "Since a 7.8-magnitude earthquake hit Syria and Türkiye two years ago — leaving 55,000 people dead, 130,000 injured and millions displaced from their homes — students, researchers and developers have been harnessing the latest AI robotics technologies to increase disaster preparedness in the region. The work is part of a Disaster Response Innovation and Education\t\n\t\tRead Article",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "Toward Knowledge-Guided AI for Inverse Design in Manufacturing: A Perspective on Domain, Physics, and Human-AI Synergy",
+      "description": "arXiv:2506.00056v1 Announce Type: new \nAbstract: Artificial intelligence (AI) is reshaping inverse design across manufacturing domain, enabling high-performance discovery in materials, products, and processes. However, purely data-driven approaches often struggle in realistic settings characterized by sparse data, high-dimensional design spaces, and nontrivial physical constraints. This perspective argues for a new generation of design systems that transcend black-box modeling by integrating domain knowledge, physics-informed learning, and intuitive human-AI interfaces. We first demonstrate how expert-guided sampling strategies enhance data efficiency and model generalization. Next, we discuss how physics-informed machine learning enables physically consistent modeling in data-scarce regimes. Finally, we explore how large language models emerge as interactive design agents connecting user intent with simulation tools, optimization pipelines, and collaborative workflows. Through illustrative examples and conceptual frameworks, we advocate that inverse design in manufacturing should evolve into a unified ecosystem, where domain knowledge, physical priors, and adaptive reasoning collectively enable scalable, interpretable, and accessible AI-driven design systems.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "The Automated but Risky Game: Modeling Agent-to-Agent Negotiations and Transactions in Consumer Markets",
+      "description": "arXiv:2506.00073v1 Announce Type: new \nAbstract: AI agents are increasingly used in consumer-facing applications to assist with tasks such as product search, negotiation, and transaction execution. In this paper, we explore a future scenario where both consumers and merchants authorize AI agents to fully automate negotiations and transactions. We aim to answer two key questions: (1) Do different LLM agents vary in their ability to secure favorable deals for users? (2) What risks arise from fully automating deal-making with AI agents in consumer markets? To address these questions, we develop an experimental framework that evaluates the performance of various LLM agents in real-world negotiation and transaction settings. Our findings reveal that AI-mediated deal-making is an inherently imbalanced game -- different agents achieve significantly different outcomes for their users. Moreover, behavioral anomalies in LLMs can result in financial losses for both consumers and merchants, such as overspending or accepting unreasonable deals. These results underscore that while automation can improve efficiency, it also introduces substantial risks. Users should exercise caution when delegating business decisions to AI agents.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "Strategic Reflectivism In Intelligent Systems",
+      "description": "arXiv:2505.22987v1 Announce Type: new \nAbstract: By late 20th century, the rationality wars had launched debates about the nature and norms of intuitive and reflective thinking. Those debates drew from mid-20th century ideas such as bounded rationality, which challenged more idealized notions of rationality observed since the 19th century. Now that 21st century cognitive scientists are applying the resulting dual process theories to artificial intelligence, it is time to dust off some lessons from this history. So this paper synthesizes old ideas with recent results from experiments on humans and machines. The result is Strategic Reflectivism, which takes the position that one key to intelligent systems (human or artificial) is pragmatic switching between intuitive and reflective inference to optimally fulfill competing goals. Strategic Reflectivism builds on American Pragmatism, transcends superficial indicators of reflective thinking such as model size or chains of thought, and becomes increasingly actionable as we learn more about the value of intuition and reflection.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "Tournament of Prompts: Evolving LLM Instructions Through Structured Debates and Elo Ratings",
+      "description": "arXiv:2506.00178v1 Announce Type: new \nAbstract: Prompt engineering represents a critical bottleneck to harness the full potential of Large Language Models (LLMs) for solving complex tasks, as it requires specialized expertise, significant trial-and-error, and manual intervention. This challenge is particularly pronounced for tasks involving subjective quality assessment, where defining explicit optimization objectives becomes fundamentally problematic. Existing automated prompt optimization methods falter in these scenarios, as they typically require well-defined task-specific numerical fitness functions or rely on generic templates that cannot capture the nuanced requirements of complex use cases. We introduce DEEVO (DEbate-driven EVOlutionary prompt optimization), a novel framework that guides prompt evolution through a debate-driven evaluation with an Elo-based selection. Contrary to prior work, DEEVOs approach enables exploration of the discrete prompt space while preserving semantic coherence through intelligent crossover and strategic mutation operations that incorporate debate-based feedback, combining elements from both successful and unsuccessful prompts based on identified strengths rather than arbitrary splicing. Using Elo ratings as a fitness proxy, DEEVO simultaneously drives improvement and preserves valuable diversity in the prompt population. Experimental results demonstrate that DEEVO significantly outperforms both manual prompt engineering and alternative state-of-the-art optimization approaches on open-ended tasks and close-ended tasks despite using no ground truth feedback. By connecting LLMs reasoning capabilities with adaptive optimization, DEEVO represents a significant advancement in prompt optimization research by eliminating the need of predetermined metrics to continuously improve AI systems.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "Balancing Profit and Fairness in Risk-Based Pricing Markets",
+      "description": "arXiv:2506.00140v1 Announce Type: new \nAbstract: Dynamic, risk-based pricing can systematically exclude vulnerable consumer groups from essential resources such as health insurance and consumer credit. We show that a regulator can realign private incentives with social objectives through a learned, interpretable tax schedule. First, we provide a formal proposition that bounding each firm's \\emph{local} demographic gap implicitly bounds the \\emph{global} opt-out disparity, motivating firm-level penalties. Building on this insight we introduce \\texttt{MarketSim} -- an open-source, scalable simulator of heterogeneous consumers and profit-maximizing firms -- and train a reinforcement learning (RL) social planner (SP) that selects a bracketed fairness-tax while remaining close to a simple linear prior via an $\\mathcal{L}_1$ regularizer. The learned policy is thus both transparent and easily interpretable. In two empirically calibrated markets, i.e., U.S. health-insurance and consumer-credit, our planner simultaneously raises demand-fairness by up to $16\\%$ relative to unregulated Free Market while outperforming a fixed linear schedule in terms of social welfare without explicit coordination. These results illustrate how AI-assisted regulation can convert a competitive social dilemma into a win-win equilibrium, providing a principled and practical framework for fairness-aware market oversight.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Utilizing AI for Aviation Post-Accident Analysis Classification",
+      "description": "arXiv:2506.00169v1 Announce Type: new \nAbstract: The volume of textual data available in aviation safety reports presents a challenge for timely and accurate analysis. This paper examines how Artificial Intelligence (AI) and, specifically, Natural Language Processing (NLP) can automate the process of extracting valuable insights from this data, ultimately enhancing aviation safety. The paper reviews ongoing efforts focused on the application of NLP and deep learning to aviation safety reports, with the goal of classifying the level of damage to an aircraft and identifying the phase of flight during which safety occurrences happen. Additionally, the paper explores the use of Topic Modeling (TM) to uncover latent thematic structures within aviation incident reports, aiming to identify recurring patterns and potential areas for safety improvement. The paper compares and contrasts the performance of various deep learning models and TM techniques applied to datasets from the National Transportation Safety Board (NTSB) and the Australian Transport Safety Bureau (ATSB), as well as the Aviation Safety Network (ASN), discussing the impact of dataset size and source on the accuracy of the analysis. The findings demonstrate that both NLP and deep learning, as well as TM, can significantly improve the efficiency and accuracy of aviation safety analysis, paving the way for more proactive safety management and risk mitigation strategies.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Research and Innovation"
+    },
+    {
+      "title": "OpenAI’s Sora is now available for FREE to all users through Microsoft Bing Video Creator on mobile",
+      "description": "OpenAI‘s Sora was one of the most hyped releases of the AI era, launching in December 2024, nearly 10 months after it was first previewed to awe-struck reactions due to its — at the time, at least — unprecedented level of realism, camera dynamism, and prompt adherence and 60-second long generation clips. However, much of […]",
+      "newsCategory": "Top Story Candidate",
+      "techCategory": "Products and Updates"
+    },
+    {
+      "title": "Why the end of Google as we know it could be your biggest opportunity yet",
+      "description": "As Google faces its biggest challenge yet, here's how you can turn uncertainty into your next big win.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Streamline personalization development: How automated ML workflows accelerate Amazon Personalize implementation",
+      "description": "This blog post presents an MLOps solution that uses AWS Cloud Development Kit (AWS CDK) and services like AWS Step Functions, Amazon EventBridge and Amazon Personalize to automate provisioning resources for data preparation, model training, deployment, and monitoring for Amazon Personalize.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Developer Tools"
+    },
+    {
+      "title": "Build GraphRAG applications using Amazon Bedrock Knowledge Bases",
+      "description": "In this post, we explore how to use Graph-based Retrieval-Augmented Generation (GraphRAG) in Amazon Bedrock Knowledge Bases to build intelligent applications. Unlike traditional vector search, which retrieves documents based on similarity scores, knowledge graphs encode relationships between entities, allowing large language models (LLMs) to retrieve information with context-aware reasoning.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Developer Tools"
+    },
+    {
+      "title": "OpenAI wants ChatGPT to be your 'super assistant' - what that means",
+      "description": "Starting in the first half of 2026, OpenAI plans to evolve ChatGPT into a super assistant that knows you, understands what you care about, and can help with virtually any task.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Create videos with your words for free – Introducing Bing Video Creator",
+      "description": "Introducing Bing Video Creator, allowing you to turn your ideas into videos, for free. Powered by Sora, Bing Video Creator transforms your text prompts into short videos. Just describe what you want to see and watch your vision come to life.",
+      "newsCategory": "Top Story Candidate",
+      "techCategory": "Products and Updates"
+    },
+    {
+      "title": "30% of Americans are now active AI users, says new ComScore data",
+      "description": "Comscore now reports on the number of monthly visitors to 117 AI services on PCs and mobile devices.",
+      "newsCategory": "Likely Noise or Opinion",
+      "techCategory": "Not Relevant"
+    },
+    {
+      "title": "Anthropic tripled its revenue in 5 months - and this is why",
+      "description": "The AI start-up has been making rapid advances thanks largely to the coding abilities of its family of Claude chatbots.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Startups and Funding"
+    },
+    {
+      "title": "Digg’s founders explain how they’re building a site for humans in the AI era",
+      "description": "The rebooted version of social site Digg aims to bring back the spirit of the old web.",
+      "newsCategory": "Solid News",
+      "techCategory": "Industry Trends"
+    }
 ]`;
 
 export function buildCategorizationPrompt(articles: Array<{objectId: string, title: string, meta_description: string}>): string {
