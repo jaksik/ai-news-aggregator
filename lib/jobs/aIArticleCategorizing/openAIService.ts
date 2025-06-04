@@ -21,9 +21,17 @@ export class OpenAICategorizationService {
   }
 
   /**
-   * Categorize articles using OpenAI
+   * Categorize articles using OpenAI with usage tracking
    */
-  async categorizeArticles(articles: ArticleForCategorization[]): Promise<CategorizedArticleResponse[]> {
+  async categorizeArticles(articles: ArticleForCategorization[]): Promise<{
+    categorizedArticles: CategorizedArticleResponse[];
+    usage: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      modelUsed: string;
+    };
+  }> {
     if (!articles || articles.length === 0) {
       throw new Error('No articles provided for categorization');
     }
@@ -36,8 +44,9 @@ export class OpenAICategorizationService {
       console.log(`🔍 Prompt length: ${prompt.length} characters`);
       
       console.log('🚀 Sending request to OpenAI...');
+      const model = "gpt-4o-mini";
       const completion = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini", // Updated to match test that worked
+        model: model,
         messages: [
           {
             role: "user",
@@ -45,8 +54,8 @@ export class OpenAICategorizationService {
           }
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1, // Updated to match test that worked
-        max_tokens: 4000, // Ensure enough tokens for response
+        temperature: 0.1,
+        max_tokens: 4000,
       });
 
       console.log('✅ Received response from OpenAI');
@@ -63,7 +72,18 @@ export class OpenAICategorizationService {
       
       console.log(`✅ Successfully categorized ${categorizedArticles.length} articles`);
       
-      return categorizedArticles;
+      // Extract usage information
+      const usage = {
+        promptTokens: completion.usage?.prompt_tokens || 0,
+        completionTokens: completion.usage?.completion_tokens || 0,
+        totalTokens: completion.usage?.total_tokens || 0,
+        modelUsed: model
+      };
+      
+      return {
+        categorizedArticles,
+        usage
+      };
 
     } catch (error) {
       console.error('❌ OpenAI categorization failed:', error);

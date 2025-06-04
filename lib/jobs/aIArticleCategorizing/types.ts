@@ -42,6 +42,7 @@ export interface CategorizationResult {
   failedUpdates: number;
   errors: string[];
   categorizedArticles: CategorizedArticleResponse[];
+  runLogId?: string;
 }
 
 export interface OpenAICategorizationResponse {
