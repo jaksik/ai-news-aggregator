@@ -198,6 +198,9 @@ GITHUB_SECRET=your-github-client-secret
 
 # Application Settings
 MAX_ARTICLES_PER_SOURCE=20  # Global article limit (overrides all other limits)
+
+# AI Services
+OPENAI_API_KEY=your-openai-api-key-here  # Required for AI categorization features
 ```
 
 ### 📊 Article Limiting System (`lib/config/articleLimits.ts`)

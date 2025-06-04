@@ -26,6 +26,10 @@ export interface AuthConfig {
   authorizedEmail: string;
 }
 
+export interface AIConfig {
+  openaiApiKey: string;
+}
+
 export interface AppConfig {
   nodeEnv: string;
   isDevelopment: boolean;
@@ -34,6 +38,7 @@ export interface AppConfig {
   database: DatabaseConfig;
   scraping: ScrapingConfig;
   auth: AuthConfig;
+  ai: AIConfig;
 }
 
 // Helper function to safely get environment variables
@@ -89,10 +94,14 @@ export const config: AppConfig = {
     googleClientSecret: getEnvVar('GOOGLE_CLIENT_SECRET'),
     authorizedEmail: getEnvVar('AUTHORIZED_EMAIL'),
   },
+
+  ai: {
+    openaiApiKey: getEnvVar('OPENAI_API_KEY'),
+  },
 };
 
 // Export individual config sections for convenience
-export const { database, scraping, auth } = config;
+export const { database, scraping, auth, ai } = config;
 
 // Validation function to ensure all required config is present
 export function validateConfig(): void {

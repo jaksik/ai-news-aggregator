@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../components/auth/AuthWrapper';
+import AiCategorizationControl from '../../components/dashboard/AiCategorizationControl';
 import { ISource } from '../../lib/types';
 
 interface DashboardStats {
@@ -225,6 +226,14 @@ const DashboardIndex: React.FC = () => {
                     </svg>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* AI Tools Section */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-slate-800 mb-6">AI Tools</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AiCategorizationControl />
               </div>
             </div>
           </div>
