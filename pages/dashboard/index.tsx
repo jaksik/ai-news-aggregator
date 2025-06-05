@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/dashboard/DashboardLayout';
 import AuthWrapper from '../../components/auth/AuthWrapper';
 import AiCategorizationControl from '../../components/dashboard/AiCategorizationControl';
+import SourceScrapeControl from '../../components/dashboard/SourceScrapeControl';
 import { ISource } from '../../lib/types';
 
 interface DashboardStats {
@@ -117,113 +118,123 @@ const DashboardIndex: React.FC = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
               {/* Total Sources */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 group">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Total Sources</p>
-                    <p className="text-3xl font-bold text-slate-800 mt-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-md font-bold text-gray-600 truncate">Total Sources</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
                       {loading ? (
-                        <div className="animate-pulse bg-slate-200 h-8 w-16 rounded"></div>
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
                       ) : (
                         stats.totalSources
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">News feeds configured</p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                    </svg>
+                    <p className="text-xs text-gray-500 mt-1">News feeds</p>
                   </div>
                 </div>
               </div>
 
               {/* Active Sources */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 group">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Active Sources</p>
-                    <p className="text-3xl font-bold text-slate-800 mt-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-md font-bold text-gray-600 truncate">Active Sources</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
                       {loading ? (
-                        <div className="animate-pulse bg-slate-200 h-8 w-16 rounded"></div>
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
                       ) : (
                         stats.enabledSources
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">Currently enabled</p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <p className="text-xs text-gray-500 mt-1">Currently enabled</p>
                   </div>
                 </div>
               </div>
 
               {/* Total Articles */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 group">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Total Articles</p>
-                    <p className="text-3xl font-bold text-slate-800 mt-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-md font-bold text-gray-600 truncate">Total Articles</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
                       {loading ? (
-                        <div className="animate-pulse bg-slate-200 h-8 w-20 rounded"></div>
+                        <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
                       ) : (
                         stats.totalArticles.toLocaleString()
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">Articles collected</p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                    <p className="text-xs text-gray-500 mt-1">Articles collected</p>
                   </div>
                 </div>
               </div>
 
               {/* Recent Fetches */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 group">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Recent Fetches</p>
-                    <p className="text-3xl font-bold text-slate-800 mt-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-md font-bold text-gray-600 truncate">Recent Fetches</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
                       {loading ? (
-                        <div className="animate-pulse bg-slate-200 h-8 w-12 rounded"></div>
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
                       ) : (
                         stats.recentFetches
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">Past 24 hours</p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
+                    <p className="text-xs text-gray-500 mt-1">Past 24 hours</p>
                   </div>
                 </div>
               </div>
 
               {/* Recent Articles */}
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300 group">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Recent Articles</p>
-                    <p className="text-3xl font-bold text-slate-800 mt-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-md font-bold text-gray-600 truncate">Recent Articles</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">
                       {loading ? (
-                        <div className="animate-pulse bg-slate-200 h-8 w-12 rounded"></div>
+                        <div className="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
                       ) : (
                         stats.recentArticles
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">Past 24 hours</p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                    <p className="text-xs text-gray-500 mt-1">Past 24 hours</p>
                   </div>
                 </div>
               </div>
@@ -231,9 +242,10 @@ const DashboardIndex: React.FC = () => {
 
             {/* AI Tools Section */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-800 mb-6">AI Tools</h2>
+              <h2 className="text-2xl font-bold text-slate-800 mb-6">Automation Tools</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AiCategorizationControl />
+                <SourceScrapeControl />
               </div>
             </div>
           </div>
