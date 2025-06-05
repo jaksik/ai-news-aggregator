@@ -67,12 +67,12 @@ export default function AiCategorizationControl({ className = '' }: AiCategoriza
             id="limit"
             type="number"
             min="1"
-            max="100"
+            max="20"
             value={limit}
             onChange={(e) => setLimit(parseInt(e.target.value) || 10)}
             className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           />
-          <span className="text-xs text-gray-500 ml-2">Max: 100</span>
+          <span className="text-xs text-gray-500 ml-2">Max: 20</span>
         </div>
 
         <button
