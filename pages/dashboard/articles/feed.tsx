@@ -33,6 +33,7 @@ const MainDashboardPage: React.FC = () => {
     sortOrder: 'desc',
     includeHidden: false,
     search: '',
+    hasRationale: false,
   });
 
   // Build query string from filters
@@ -44,6 +45,7 @@ const MainDashboardPage: React.FC = () => {
     if (filters.endDate) params.append('endDate', filters.endDate);
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search && filters.search.trim()) params.append('search', filters.search.trim());
+    if (filters.hasRationale) params.append('hasRationale', filters.hasRationale.toString());
     params.append('sortBy', filters.sortBy);
     params.append('sortOrder', filters.sortOrder);
     params.append('includeHidden', filters.includeHidden.toString());
@@ -167,14 +169,14 @@ const MainDashboardPage: React.FC = () => {
   }, []);
 
   // Handle article categorization
-  const handleArticleCategorize = useCallback(async (articleId: string, newsCategory?: string, techCategory?: string) => {
+  const handleArticleCategorize = useCallback(async (articleId: string, newsCategory?: string, techCategory?: string, categoryRationale?: string) => {
     try {
       const response = await fetch(`/api/articles/${articleId}/categorize`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ newsCategory, techCategory }),
+        body: JSON.stringify({ newsCategory, techCategory, categoryRationale }),
       });
 
       if (!response.ok) {

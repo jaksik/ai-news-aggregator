@@ -16,6 +16,7 @@ export interface ArticlesListQuery {
   sortOrder?: string;
   includeHidden?: string;
   search?: string;
+  hasRationale?: string;
 }
 
 /**
@@ -33,7 +34,8 @@ export const listArticles: RequestHandler<IArticle[]> = async (req, res) => {
     sortBy = 'publishedDate',
     sortOrder = 'desc',
     includeHidden = 'false',
-    search
+    search,
+    hasRationale
   } = req.query as ArticlesListQuery;
 
   // Build filter query
@@ -70,6 +72,11 @@ export const listArticles: RequestHandler<IArticle[]> = async (req, res) => {
       { description: { $regex: search.trim(), $options: 'i' } },
       { sourceName: { $regex: search.trim(), $options: 'i' } }
     ];
+  }
+
+  // Rationale filter
+  if (hasRationale === 'true') {
+    filter.categoryRationale = { $exists: true, $nin: [null, ''] };
   }
 
   // Build sort query

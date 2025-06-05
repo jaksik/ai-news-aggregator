@@ -8,7 +8,7 @@ interface ArticleCardProps {
   onArticleVisibilityChange: (articleId: string, isHidden: boolean) => void;
   onArticleDelete: (articleId: string) => void;
   categorizationMode?: boolean;
-  onCategoryUpdate?: (articleId: string, updates: { newsCategory?: string; techCategory?: string }) => Promise<void>;
+  onCategoryUpdate?: (articleId: string, updates: { newsCategory?: string; techCategory?: string; categoryRationale?: string }) => Promise<void>;
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ 

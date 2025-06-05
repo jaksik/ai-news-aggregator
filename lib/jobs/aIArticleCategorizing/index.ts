@@ -1,18 +1,18 @@
 // Main orchestrator for AI article categorization with comprehensive logging
 import dbConnect from '../../db';
 import Article from '../../../models/Article';
-import CategorizationRunLog, { 
-  ICategorizationRunLog, 
+import CategorizationRunLog, {
+  ICategorizationRunLog,
   IArticleCategorizationSummary,
   ICategoryDistribution,
-  ITechCategoryDistribution 
+  ITechCategoryDistribution
 } from '../../../models/CategorizationRunLog';
 import { OpenAICategorizationService } from './openAIService';
-import type { 
-  UncategorizedArticle, 
-  ArticleForCategorization, 
+import type {
+  UncategorizedArticle,
+  ArticleForCategorization,
   CategorizationResult,
-  CategorizedArticleResponse 
+  CategorizedArticleResponse
 } from './types';
 
 export class AiArticleCategorizationOrchestrator {
@@ -26,12 +26,12 @@ export class AiArticleCategorizationOrchestrator {
    * Main method to categorize uncategorized articles with comprehensive logging
    */
   async categorizeUncategorizedArticles(
-    limit: number = 20, 
+    limit: number = 20,
     triggeredBy: 'manual' | 'scheduled' | 'api' = 'manual'
   ): Promise<CategorizationResult> {
     const startTime = Date.now();
     let runLog: ICategorizationRunLog | null = null;
-    
+
     console.log(`🚀 Starting AI categorization job for ${limit} articles...`);
 
     try {
@@ -48,7 +48,7 @@ export class AiArticleCategorizationOrchestrator {
       // Step 1: Fetch uncategorized articles
       console.log('📋 Step 3: Fetching uncategorized articles from database...');
       const uncategorizedArticles = await this.fetchUncategorizedArticles(limit);
-      
+
       if (uncategorizedArticles.length === 0) {
         console.log('✅ No uncategorized articles found - job complete');
         await this.finalizeRunLog(runLog, {
@@ -56,7 +56,7 @@ export class AiArticleCategorizationOrchestrator {
           usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0, modelUsed: 'none' },
           updateResults: { successful: 0, failed: 0, errors: [] }
         }, startTime);
-        
+
         return {
           success: true,
           totalProcessed: 0,
@@ -69,7 +69,7 @@ export class AiArticleCategorizationOrchestrator {
       }
 
       console.log(`📋 Found ${uncategorizedArticles.length} uncategorized articles`);
-      
+
       // Update run log with attempted count
       await this.updateRunLogProgress(runLog, uncategorizedArticles.length);
 
@@ -112,7 +112,7 @@ export class AiArticleCategorizationOrchestrator {
     } catch (error) {
       const duration = Date.now() - startTime;
       console.error(`❌ Categorization job failed after ${duration}ms:`, error);
-      
+
       // Update run log with failure
       if (runLog) {
         try {
@@ -121,7 +121,7 @@ export class AiArticleCategorizationOrchestrator {
           console.error('❌ Failed to update run log with failure:', logError);
         }
       }
-      
+
       return {
         success: false,
         totalProcessed: 0,
@@ -157,10 +157,10 @@ export class AiArticleCategorizationOrchestrator {
           }
         ]
       })
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .select('_id title descriptionSnippet')
-      .lean();
+        .limit(limit)
+        .sort({ publishedDate: -1 })  // ← CHANGED: from createdAt to publishedDate
+        .select('_id title descriptionSnippet')
+        .lean();
 
       return articles.map(article => ({
         _id: article._id.toString(),
@@ -217,6 +217,7 @@ export class AiArticleCategorizationOrchestrator {
           {
             newsCategory: categorizedArticle.newsCategory,
             techCategory: categorizedArticle.techCategory,
+            categoryRationale: categorizedArticle.brief_rationale,
             categorizationStatus: 'completed',
             categorizedAt: new Date(),
             // Store AI categorization metadata
@@ -257,7 +258,7 @@ export class AiArticleCategorizationOrchestrator {
    * Create initial run log
    */
   private async createRunLog(
-    articleLimit: number, 
+    articleLimit: number,
     triggeredBy: 'manual' | 'scheduled' | 'api'
   ): Promise<ICategorizationRunLog> {
     const runLog = new CategorizationRunLog({
@@ -301,7 +302,7 @@ export class AiArticleCategorizationOrchestrator {
    * Update run log with attempted article count
    */
   private async updateRunLogProgress(
-    runLog: ICategorizationRunLog, 
+    runLog: ICategorizationRunLog,
     attemptedCount: number
   ): Promise<void> {
     runLog.totalArticlesAttempted = attemptedCount;
@@ -320,10 +321,10 @@ export class AiArticleCategorizationOrchestrator {
     // GPT-4o-mini pricing (as of 2024): $0.15 per 1M input tokens, $0.60 per 1M output tokens
     const inputCostPer1M = 0.15;
     const outputCostPer1M = 0.60;
-    
+
     const inputCost = (usage.promptTokens / 1_000_000) * inputCostPer1M;
     const outputCost = (usage.completionTokens / 1_000_000) * outputCostPer1M;
-    
+
     return inputCost + outputCost;
   }
 
@@ -416,17 +417,17 @@ export class AiArticleCategorizationOrchestrator {
   ): Promise<void> {
     const endTime = new Date();
     const processingTimeMs = Date.now() - startTime;
-    
+
     // Calculate distributions
-    const { newsCategoryDistribution, techCategoryDistribution } = 
+    const { newsCategoryDistribution, techCategoryDistribution } =
       this.calculateCategoryDistributions(results.categorizedArticles);
-    
+
     // Calculate cost
     const estimatedCostUSD = this.calculateOpenAICost(results.usage);
-    
+
     // Create article summaries
     const articleSummaries = this.createArticleSummaries(results.categorizedArticles, results.updateResults);
-    
+
     // Determine final status
     let status: 'completed' | 'completed_with_errors' | 'failed';
     if (results.updateResults.failed === 0) {
@@ -468,7 +469,7 @@ export class AiArticleCategorizationOrchestrator {
   ): Promise<void> {
     const endTime = new Date();
     const processingTimeMs = Date.now() - startTime;
-    
+
     runLog.endTime = endTime;
     runLog.status = 'failed';
     runLog.processingTimeMs = processingTimeMs;

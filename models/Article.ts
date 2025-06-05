@@ -10,6 +10,7 @@ export interface IArticle extends Document {
   fetchedAt: Date; // When your aggregator fetched this article
   newsCategory?: string; // Optional: category of the article, if applicable
   techCategory?: string; // Optional: technology category, if applicable
+  categoryRationale?: string; // Optional: technology category, if applicable
   categorizationStatus: 'pending' | 'processing' | 'completed' | 'failed';
   categorizedAt?: Date;
   isRead: boolean;
@@ -64,6 +65,10 @@ const ArticleSchema: Schema<IArticle> = new Schema(
     techCategory: {
       type: String,
       index: true,
+    },
+    categoryRationale: {
+      type: String,
+      trim: true,
     },
     categorizationStatus: {
       type: String,

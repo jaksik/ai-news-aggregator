@@ -9,6 +9,7 @@ export interface FilterOptions {
   sortOrder: 'asc' | 'desc';
   includeHidden: boolean;
   search?: string;
+  hasRationale?: boolean;
 }
 
 interface ArticleFiltersProps {
@@ -26,6 +27,7 @@ const DEFAULT_FILTERS: FilterOptions = {
   sortOrder: 'desc',
   includeHidden: false,
   search: '',
+  hasRationale: false,
 };
 
 const SORT_OPTIONS = [
@@ -144,12 +146,14 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
     filters.sortBy !== DEFAULT_FILTERS.sortBy ||
     filters.sortOrder !== DEFAULT_FILTERS.sortOrder ||
     filters.includeHidden !== DEFAULT_FILTERS.includeHidden ||
+    filters.hasRationale !== DEFAULT_FILTERS.hasRationale ||
     (filters.search && filters.search.trim() !== '');
 
   const activeFiltersCount = [
     filters.source,
     filters.startDate || filters.endDate,
     filters.includeHidden,
+    filters.hasRationale,
     filters.search?.trim(),
   ].filter(Boolean).length;
 
@@ -372,13 +376,25 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
           {/* Hidden Toggle */}
           <button
             onClick={() => handleFilterChange('includeHidden', !filters.includeHidden)}
-            className={`w-full py-1 rounded text-xs ${
+            className={`w-full py-1 rounded text-xs mb-1 ${
               filters.includeHidden
                 ? 'bg-blue-500 text-white'
                 : 'bg-white border border-gray-200 hover:bg-gray-50'
             }`}
           >
             {filters.includeHidden ? 'Show Hidden' : 'Hide Hidden'}
+          </button>
+          
+          {/* Rationale Filter */}
+          <button
+            onClick={() => handleFilterChange('hasRationale', !filters.hasRationale)}
+            className={`w-full py-1 rounded text-xs ${
+              filters.hasRationale
+                ? 'bg-green-500 text-white'
+                : 'bg-white border border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            {filters.hasRationale ? 'Has Rationale' : 'Show All'}
           </button>
         </div>
       </div>

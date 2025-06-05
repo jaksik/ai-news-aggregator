@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await dbConnect();
 
     const { articleId } = req.query;
-    const { newsCategory, techCategory } = req.body;
+    const { newsCategory, techCategory, categoryRationale } = req.body;
 
     if (!articleId || typeof articleId !== 'string') {
       return res.status(400).json({ error: 'Article ID is required' });
@@ -41,9 +41,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       updateData.techCategory = techCategory;
     }
 
-    // Validate that at least one category field is being updated
-    if (newsCategory === undefined && techCategory === undefined) {
-      return res.status(400).json({ error: 'At least one category field must be provided for update' });
+    // Handle category rationale (including removal)
+    if (categoryRationale !== undefined) {
+      updateData.categoryRationale = categoryRationale;
+    }
+
+    // Validate that at least one field is being updated
+    if (newsCategory === undefined && techCategory === undefined && categoryRationale === undefined) {
+      return res.status(400).json({ error: 'At least one category field or rationale must be provided for update' });
     }
 
     const updatedArticle = await Article.findByIdAndUpdate(
