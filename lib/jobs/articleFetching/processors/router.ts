@@ -5,6 +5,8 @@
  */
 
 import { RSSProcessor } from './rss';
+import { HTMLProcessor } from './html';
+
 import { ProcessingSummary, SourceToFetch } from '../../../types';
 
 export class ProcessorRouter {
@@ -23,9 +25,9 @@ export class ProcessorRouter {
                 case 'rss':
                     return await RSSProcessor.processRSSSource(source, rawContent);
                     
-                case 'html':
-                    // HTML processing not yet implemented
-                    throw new Error('HTML processing is not yet implemented. Please use RSS sources for now.');
+                                case 'html':
+                    // HTML processor fetches its own content
+                    return await HTMLProcessor.processSource(source);
                     
                 default:
                     throw new Error(`Unknown source type: ${source.type}. Only 'rss' is currently supported.`);
