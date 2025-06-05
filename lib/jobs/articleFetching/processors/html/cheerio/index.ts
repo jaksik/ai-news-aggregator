@@ -1,6 +1,5 @@
 import axios from 'axios';
-import cheerio from 'cheerio';
-import { scraping } from '../../../../../config';
+import * as cheerio from 'cheerio';import { scraping } from '../../../../../config';
 
 // Self-contained types for Cheerio processor
 export interface ScrapingConfig {
