@@ -1,70 +1,7 @@
-// Core prompt content for AI article categorization
-// Based on the Canvas: ai_news_curation_prompt_v1
-
-export const SYSTEM_PROMPT = `SYSTEM: You are an expert AI News Curation Assistant. Your primary function is to help curate AI news articles for a newsletter by categorizing them based *only* on their provided title and meta description. The newsletter aims to provide a general overview of important, factual AI news, filtering out opinion pieces, excessive speculation in favor of more impactful developments.
-
-## YOUR TASK:
-
-For each article I provide (consisting of a title and meta description), you will:
-
-1. Analyze the title and meta description against the "Criteria for Categorization" below.
-
-2. *Assign ONE news category AND ONE tech category to the article provided for curation*.
-
-3. Provide a brief (1-2 sentence) rationale for your categorization, referencing specific keywords or phrases from the title/meta if they strongly influenced your decision.
-
-4. Format your entire output as a single JSON array, with each object in the array representing an article you've processed.
-
-## NEWS CATEGORY CRITERIA:
-
-1. **Top Story Candidate:**
-   * **Nature:** Major, impactful news. High signal, low noise.
-   * **Keywords/Signals:** "New model released," "launches," "unveils," "breakthrough," "major partnership," "acquires," "significant funding ($50M+)," "new GPU/hardware," "foundational model," "open source."
-   * **Content:** Announcements of new AI products, services, significant model versions, major research papers with clear breakthroughs, or high-impact business news.
-
-2. **Solid News:**
-   * **Nature:** Important and factual updates, but perhaps not groundbreaking enough for a top headline.
-   * **Keywords/Signals:** "Updates," "enhances," "new feature," "integrates," "expands," "study shows," "report finds," "secures funding"
-   * **Content:** Significant updates to existing AI tools/platforms, new noteworthy features, interesting case studies with concrete results, well-supported industry reports.
-
-3. **Interesting but Lower Priority:**
-   * **Nature:** Potentially interesting but more niche or less broadly impactful.
-   * **Keywords/Signals:** "Tips for," "explores," "discusses," "community project," vision pieces, conceptual discussions.
-   * **Content:** Niche tool releases, specific tutorials, community news, smaller research findings, thoughtful perspectives, platform insights.
-
-4. **Likely Noise or Opinion:**
-   * **Nature:** Content that is not direct news or is overly speculative/opinion-based.
-   * **Keywords/Signals:** "Opinion:","Perspective:","How to survive," "The future of X is Y (speculative)", "Is AI X?", "Why I think Y," event announcements, tips collections.
-   * **Content:** Opinion pieces, guest posts, highly speculative articles, basic explainers, marketing content, fear-mongering, generic "AI trend" pieces, event promotion.
-
-## TECH CATEGORY CRITERIA:
-
-1. **Products and Updates:** New AI products, major feature releases, significant model launches, hardware announcements
-2. **Developer Tools:** APIs, frameworks, coding tools, SDKs, development platforms, technical utilities
-3. **Research and Innovation:** Research papers, academic breakthroughs, novel techniques, experimental findings, scientific studies
-4. **Industry Trends:** Market analysis, business trends, adoption studies, industry reports, strategic insights, company shifts
-5. **Startups and Funding:** Investment news, startup announcements, funding rounds, acquisitions, business developments
-6. **Not Relevant:** Non-tech content, general news, opinion pieces without technical substance, promotional material
-
-## OUTPUT FORMAT (Strict JSON Array):
-
-You MUST provide your response as a single, valid JSON array. Each element in the array should be a JSON object structured as follows:
-
-\`\`\`json
-[
-  {
-    "objectId": "The article's MongoDB ObjectId as provided",
-    "original_title": "The Article's Title As Provided",
-    "newsCategory": "One of: Top Story Candidate, Solid News, Interesting but Lower Priority, Likely Noise or Opinion",
-    "techCategory": "One of: Products and Updates, Developer Tools, Research and Innovation, Industry Trends, Startups and Funding, Not Relevant",
-    "brief_rationale": "Your 1-2 sentence justification for both categories."
-  }
-]
-\`\`\``;
-
-export const CATEGORIZATION_EXAMPLES = `## EXAMPLES OF MY PREFERRED CURATION:
-
-[
+{
+  "success": true,
+  "count": 30,
+  "articles": [
     {
       "title": "AI breakthroughs are bringing hope to cancer research and treatment",
       "description": "Read Ruth Porat's remarks on AI and cancer research at the American Society of Clinical Oncology.",
@@ -136,6 +73,13 @@ export const CATEGORIZATION_EXAMPLES = `## EXAMPLES OF MY PREFERRED CURATION:
       "categoryRationale": "This article details an investigative effort to quantify AI's energy consumption, aligning with 'Research and Innovation' as it delves into the process and challenges of understanding AI's environmental impact. While the topic of AI's energy use is significant, the focus on the journalistic or research effort to tally these figures, rather than presenting new definitive data or a breakthrough, makes it 'Interesting but Lower Priority' for a general audience."
     },
     {
+      "title": "The Download: reasons to be optimistic about AI’s energy use, and Caiwei Chen’s three things",
+      "description": "This is today’s edition of The Download, our weekday newsletter that provides a daily dose of what’s going on in the world of technology. Four reasons to be optimistic about AI’s energy usage Two weeks ago, we launched Power Hungry, a new series shining a light on the energy demands and carbon costs of the artificial intelligence…",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Industry Trends",
+      "categoryRationale": "As a newsletter edition discussing AI's energy use, this piece offers a perspective on an 'Industry Trend'. It's 'Interesting but Lower Priority' because it's more of a commentary or summary within a recurring publication rather than a primary news announcement."
+    },
+    {
       "title": "What’s next for AI and math",
       "description": "MIT Technology Review’s What’s Next series looks across industries, trends, and technologies to give you a first look at the future. You can read the rest of them here. The way DARPA tells it, math is stuck in the past. In April, the US Defense Advanced Research Projects Agency kicked off a new initiative called expMath—short…",
       "newsCategory": "Interesting but Lower Priority",
@@ -199,6 +143,13 @@ export const CATEGORIZATION_EXAMPLES = `## EXAMPLES OF MY PREFERRED CURATION:
       "categoryRationale": "Google's enhancement of NotebookLM with simplified sharing capabilities is a direct update to an existing product. This makes it 'Solid News' as it's a factual announcement about a new feature rollout for a Google product, falling squarely under 'Products and Updates'."
     },
     {
+      "title": "What game companies can learn from AI analysis of 1.5M gamer conversations | Creativ Company",
+      "description": "Creativ Company is emerging today as a new kind of market intelligence company. It uses AI to do do sentiment analysis.",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Industry Trends",
+      "categoryRationale": "The use of AI for sentiment analysis in the gaming industry by a new company points to an emerging 'Industry Trend' in market intelligence. It's 'Interesting but Lower Priority' as it showcases a specific application by a new entrant."
+    },
+    {
       "title": "Epic Games reveals The State of Unreal for 2025",
       "description": "Epic Games unveiled the State of Unreal in a keynote speech by CEO Tim Sweeney at the Unreal Fest in Orlando, Florida.",
       "newsCategory": "Top Story Candidate",
@@ -241,36 +192,18 @@ export const CATEGORIZATION_EXAMPLES = `## EXAMPLES OF MY PREFERRED CURATION:
       "categoryRationale": "Reports about a movie deal concerning past events at OpenAI fall into entertainment news rather than direct technological advancements or industry shifts, thus categorized as 'Likely Noise or Opinion' and 'Not Relevant' to core AI news."
     },
     {
+      "title": "Anthropic’s AI is writing its own blog — with human oversight",
+      "description": "Anthropic has given its AI a blog. A week ago, Anthropic quietly launched Claude Explains, a new page on its website that’s generated mostly by the company’s AI model family, Claude. Populated by posts on technical topics related to various Claude use cases (e.g. “Simplify complex codebases with Claude”), the blog is intended to be […]",
+      "newsCategory": "Interesting but Lower Priority",
+      "techCategory": "Industry Trends",
+      "categoryRationale": "Anthropic's experiment with an AI-written blog, albeit with human oversight, highlights an emerging 'Industry Trend' where companies are exploring generative AI for various content creation tasks. While a novel application, it's categorized as 'Interesting but Lower Priority' because it's more of an exploratory showcase of AI capabilities rather than a major product launch or groundbreaking research announcement with immediate, widespread impact."
+    },
+    {
       "title": "Windsurf says Anthropic is limiting its direct access to Claude AI models",
       "description": "Windsurf, the popular vibe coding startup that’s reportedly being acquired by OpenAI, says Anthropic significantly reduced its first-party access to its Claude 3.7 Sonnet and Claude 3.5 Sonnet AI models. Windsurf CEO Varun Mohan said in a post on X Tuesday that Anthropic gave Windsurf little notice for this change, and the startup now has […]",
       "newsCategory": "Interesting but Lower Priority",
       "techCategory": "Industry Trends",
       "categoryRationale": "A startup's report on changes to API access for a major AI model reflects shifts in platform dynamics, which is an 'Industry Trend'. It's 'Interesting but Lower Priority' as it primarily impacts specific developers rather than the broader market immediately."
-    },
-    {
-      "title": "It’s not your imagination: AI is speeding up the pace of change",
-      "description": "Venture capitalist Mary Meeker just dropped a 340-page report to describe the speed at which AI is being developed, adopted, spent on, and used.",
-      "newsCategory": "Likely Noise or Opinion",
-      "techCategory": "Not Relevant",
-      "categoryRationale": "A lengthy report from a venture capitalist analyzing the pace of AI development and adoption, while potentially insightful, primarily represents an opinion/analysis piece rather than a factual news event. Its broad scope and speculative nature place it in 'Likely Noise or Opinion', and it's 'Not Relevant' as a direct AI technology update."
-    },
-    {
-      "title": "My picks for the best robot vacuums for pet hair of 2025: Roomba, Eufy, Ecovacs, and more",
-      "description": "I tested the best robot vacuums for pet hair from iRobot, Roborock, and more to effortlessly keep your floors clean without the old upright vacuum.",
-      "newsCategory": "Likely Noise or Opinion",
-      "techCategory": "Not Relevant",
-      "categoryRationale": "This article is a subjective product review and buying guide for robot vacuums. While these devices may incorporate AI, the content is focused on consumer product recommendations rather than AI technology itself, making it 'Likely Noise or Opinion' and 'Not Relevant' to core AI news."
     }
-]`;
-
-export function buildCategorizationPrompt(articles: Array<{ objectId: string, title: string, meta_description: string }>): string {
-  const articlesJson = JSON.stringify(articles, null, 2);
-
-  return `${SYSTEM_PROMPT}
-
-${CATEGORIZATION_EXAMPLES}
-
-## ARTICLES TO CURATE NOW:
-
-${articlesJson}`;
+  ]
 }

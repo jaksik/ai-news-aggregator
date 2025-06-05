@@ -18,6 +18,7 @@ const SourcesPage: React.FC = () => {
   // Bulk selection state
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [isBulkOperating, setIsBulkOperating] = useState<boolean>(false);
+  const [isScrapingAll, setIsScrapingAll] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'enabled' | 'disabled'>('all');
 
@@ -259,6 +260,61 @@ const SourcesPage: React.FC = () => {
     }
   };
 
+  const handleScrapeAll = async () => {
+    const enabledSources = sources.filter(source => source.isEnabled);
+    
+    if (enabledSources.length === 0) {
+      alert('No enabled sources to scrape. Please enable at least one source first.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `This will scrape all ${enabledSources.length} enabled source${enabledSources.length !== 1 ? 's' : ''}. This may take a while. Continue?`
+    );
+    
+    if (!confirmed) return;
+
+    setIsScrapingAll(true);
+    setActionError(null);
+
+    try {
+      const response = await fetch('/api/sources/scrape-all', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to scrape all sources');
+
+      const result = data.data || data;
+      
+      // Show comprehensive results
+      const totalFound = result.totalItemsFound || 0;
+      const totalProcessed = result.totalItemsProcessed || 0;
+      const totalNew = result.totalNewItemsAdded || 0;
+      const totalSkipped = result.totalItemsSkipped || 0;
+      const sourcesProcessed = result.sourcesProcessed || enabledSources.length;
+      const hasErrors = result.errors && result.errors.length > 0;
+      
+      const successMessage = `Scrape All completed!\n` +
+                           `• Sources processed: ${sourcesProcessed}\n` +
+                           `• Total articles found: ${totalFound}\n` +
+                           `• Total articles processed: ${totalProcessed}\n` +
+                           `• New articles saved: ${totalNew}\n` +
+                           `• Articles skipped: ${totalSkipped}` +
+                           (hasErrors ? `\n• Errors: ${result.errors.length}` : '') +
+                           `\n• Duration: ${result.duration ? Math.round(result.duration) + 'ms' : 'Unknown'}`;
+      
+      alert(successMessage);
+      await fetchSources(); // Refresh to show updated "Last Fetched" times
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setActionError(`Scrape All failed: ${errorMessage}`);
+    } finally {
+      setIsScrapingAll(false);
+    }
+  };
+
   return (
     <AuthWrapper>
       <DashboardLayout pageTitle="Sources - AI News Aggregator">
@@ -272,7 +328,26 @@ const SourcesPage: React.FC = () => {
                   Manage your RSS feeds and news sources
                 </p>
               </div>
-              <div className="mt-4 sm:mt-0">
+              <div className="mt-4 sm:mt-0 flex space-x-3">
+                <button
+                  onClick={handleScrapeAll}
+                  disabled={isScrapingAll || sources.filter(s => s.isEnabled).length === 0}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isScrapingAll ? (
+                    <>
+                      <div className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      Scraping...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Scrape All Sources
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={handleAddSourceClick}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

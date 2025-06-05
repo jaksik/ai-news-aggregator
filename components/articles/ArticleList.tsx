@@ -10,7 +10,7 @@ interface ArticleListProps {
   total?: number;
   loading?: boolean;
   categorizationMode?: boolean;
-  onArticleCategorize?: (articleId: string, newsCategory?: string, techCategory?: string) => void;
+  onArticleCategorize?: (articleId: string, newsCategory?: string, techCategory?: string, categoryRationale?: string) => void;
 }
 
 const ArticleList: React.FC<ArticleListProps> = ({ 
@@ -73,9 +73,9 @@ const ArticleList: React.FC<ArticleListProps> = ({
             onArticleVisibilityChange={onArticleVisibilityChange}
             onArticleDelete={onArticleDelete}
             categorizationMode={categorizationMode}
-            onCategoryUpdate={async (articleId: string, updates: { newsCategory?: string; techCategory?: string }) => {
+            onCategoryUpdate={async (articleId: string, updates: { newsCategory?: string; techCategory?: string; categoryRationale?: string }) => {
               if (onArticleCategorize) {
-                await onArticleCategorize(articleId, updates.newsCategory, updates.techCategory);
+                await onArticleCategorize(articleId, updates.newsCategory, updates.techCategory, updates.categoryRationale);
               }
             }}
           />
